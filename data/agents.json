@@ -1,0 +1,167 @@
+{
+  "_comment": "Agent identity mapping. team: 'sentri' = full call tracking + accountability. team: 'plusone' = sales tracking only (no call/talk time).",
+  "agents": [
+    {
+      "name": "Donald Timpson",
+      "discordId": "303300412071739394",
+      "notionUserId": "30cd872b-594c-81d3-b8e8-00024de9e1fb",
+      "quoUserId": "USJTJiPj6w",
+      "team": "admin",
+      "role": "admin",
+      "active": true
+    },
+    {
+      "name": "Shez Barlow",
+      "discordId": "1478100357061152909",
+      "notionUserId": "317d872b-594c-81b9-af88-0002411b9da8",
+      "quoUserId": "USaAHUnMsw",
+      "team": "sentri",
+      "role": "agent",
+      "active": true
+    },
+    {
+      "name": "Lucio Fridlander",
+      "discordId": "1506984092263252031",
+      "notionUserId": "360d872b-594c-81ee-8956-0002162c50cf",
+      "quoUserId": "USYfhVQTqA",
+      "team": "sentri",
+      "role": "agent",
+      "active": true
+    },
+    {
+      "name": "Emmanuel Marquez",
+      "discordId": "307345740601229313",
+      "notionUserId": "360d872b-594c-81cf-a045-0002cdaa4b38",
+      "quoUserId": "USfCaXqbkT",
+      "team": "sentri",
+      "role": "agent",
+      "active": true
+    },
+    {
+      "name": "Brady Timpson",
+      "discordId": "998659570576654397",
+      "notionUserId": "2fdd872b-594c-811f-823d-0002fa6a3a3b",
+      "quoUserId": "USh26Pn0CX",
+      "team": "plusone",
+      "role": "agent",
+      "active": true
+    },
+    {
+      "name": "Jeanette Zimmerman",
+      "discordId": "856942911395201104",
+      "notionUserId": "30bd872b-594c-81c5-ad16-00029d31ad7d",
+      "quoUserId": "US2ey4tLcA",
+      "team": "plusone",
+      "role": "agent",
+      "active": true
+    },
+    {
+      "name": "Verla Hammon",
+      "discordId": "1201623299122282507",
+      "notionUserId": "327d872b-594c-811e-bc1d-00025da1e7bb",
+      "quoUserId": "USyRYx4Bzr",
+      "team": "plusone",
+      "role": "agent",
+      "active": true
+    },
+    {
+      "name": "James Spencer",
+      "discordId": "1502373241451188406",
+      "notionUserId": "313d872b-594c-8138-992b-00025a9a22f0",
+      "quoUserId": "US0Eaf2lZV",
+      "team": "plusone",
+      "role": "agent",
+      "active": true
+    },
+    {
+      "name": "Jade Lebaron",
+      "discordId": "1507874168488595536",
+      "notionUserId": "368d872b-594c-81f5-8f79-0002f520e490",
+      "quoUserId": "USwyeqtA74",
+      "team": "sentri",
+      "role": "agent",
+      "active": true
+    },
+    {
+      "name": "Madelyn Staddon",
+      "discordId": "1508847607999500410",
+      "notionUserId": "368d872b-594c-81e6-af9c-00021e6779c7",
+      "quoUserId": "USyX1XQLjl",
+      "team": "sentri",
+      "role": "agent",
+      "active": true
+    },
+    {
+      "name": "Jasmine Cruz",
+      "discordId": "1508862335908053194",
+      "notionUserId": "",
+      "quoUserId": "",
+      "team": "sentri",
+      "role": "agent",
+      "active": true
+    },
+    {
+      "name": "Akiami Byrd",
+      "discordId": "1479503248778989581",
+      "notionUserId": "368d872b-594c-81ce-b6c4-0002b0290080",
+      "quoUserId": "USIQQ3Dn0T",
+      "team": "sentri",
+      "role": "agent",
+      "active": true
+    },
+    {
+      "name": "Steve Laudie",
+      "discordId": "1433815568817066140",
+      "notionUserId": "",
+      "quoUserId": "",
+      "team": "sentri",
+      "role": "agent",
+      "active": true
+    },
+    {
+      "name": "Ivan Nic",
+      "discordId": "1506774715602178061",
+      "notionUserId": "366d872b-594c-8178-b089-0002732e3fa3",
+      "quoUserId": "",
+      "team": "sentri",
+      "role": "agent",
+      "active": true
+    },
+    {
+      "name": "Brayden Hammon",
+      "discordId": "1504606583685124106",
+      "notionUserId": "365d872b-594c-8144-830a-000227c9c259",
+      "quoUserId": "US4Q27qUH6",
+      "team": "sentri",
+      "role": "agent",
+      "active": false
+    },
+    {
+      "name": "Bryan Dockstader",
+      "discordId": "1504507382045081693",
+      "notionUserId": "35fd872b-594c-81da-af1b-00027ce8069f",
+      "quoUserId": "USOJcG4c4b",
+      "team": "sentri",
+      "role": "agent",
+      "active": false
+    },
+    {
+      "name": "Monte Hammon",
+      "discordId": "1494062403049099406",
+      "notionUserId": "343d872b-594c-814b-b747-0002b5ffa0ea",
+      "quoUserId": "USa7a0vsRq",
+      "team": "sentri",
+      "role": "agent",
+      "active": false
+    },
+    {
+      "name": "Vivian Holm",
+      "discordId": "1456165415502876906",
+      "notionUserId": "333d872b-594c-8147-bd7b-0002426570c9",
+      "quoUserId": "USHVnwoPqS",
+      "team": "sentri",
+      "role": "agent",
+      "active": false
+    }
+  ]
+}

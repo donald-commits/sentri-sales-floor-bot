@@ -1,0 +1,19 @@
+{
+  "sales": [
+    { "count": 1, "message": "FIRST SALE EVER! Welcome to the board!" },
+    { "count": 5, "message": "5 sales down! You're getting dangerous!" },
+    { "count": 10, "message": "DOUBLE DIGITS! 10 sales — certified closer!" },
+    { "count": 25, "message": "25 SALES! Quarter-century club!" },
+    { "count": 50, "message": "50 SALES! Half a hundred — absolute machine!" },
+    { "count": 100, "message": "100 SALES! CENTURION STATUS! Legend!" }
+  ],
+  "revenue": [
+    { "amount": 10000, "message": "First $10K sale! Big money moves!" },
+    { "amount": 25000, "message": "$25K DEAL! That's a fat one!" },
+    { "amount": 50000, "message": "$50K SALE?! MONSTER DEAL!" }
+  ],
+  "weekly": [
+    { "count": 5, "message": "5-SALE WEEK! On fire!" },
+    { "count": 10, "message": "10-SALE WEEK! ABSOLUTELY UNSTOPPABLE!" }
+  ]
+}

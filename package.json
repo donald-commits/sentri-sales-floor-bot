@@ -1,0 +1,20 @@
+{
+  "name": "sentri-sales-floor-bot",
+  "version": "1.0.0",
+  "description": "Discord sales floor bot for Sentri Homes — leaderboards, accountability, hype",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "setup": "node setup-channels.js"
+  },
+  "dependencies": {
+    "axios": "^1.7.0",
+    "croner": "^8.0.0",
+    "discord.js": "^14.19.2",
+    "dotenv": "^16.4.0",
+    "express": "^5.2.1"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

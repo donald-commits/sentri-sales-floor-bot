@@ -1,0 +1,75 @@
+{
+  "Donald Timpson": {
+    "sales": [
+      1
+    ],
+    "revenue": [
+      10000,
+      25000
+    ],
+    "weekly": []
+  },
+  "Shez": {
+    "sales": [
+      1,
+      5,
+      10
+    ],
+    "revenue": [
+      10000,
+      25000,
+      50000
+    ],
+    "weekly": []
+  },
+  "Lucio Fridlander": {
+    "sales": [],
+    "revenue": [],
+    "weekly": []
+  },
+  "Emmanuel Marquez": {
+    "sales": [],
+    "revenue": [],
+    "weekly": []
+  },
+  "Brady Timpson": {
+    "sales": [
+      1,
+      5,
+      10
+    ],
+    "revenue": [
+      10000,
+      25000,
+      50000
+    ],
+    "weekly": []
+  },
+  "Jeanette Zimmerman": {
+    "sales": [
+      1,
+      5,
+      10
+    ],
+    "revenue": [
+      10000,
+      25000
+    ],
+    "weekly": []
+  },
+  "Verla Hammon": {
+    "sales": [
+      1,
+      5
+    ],
+    "revenue": [
+      10000
+    ],
+    "weekly": []
+  },
+  "James Spencer": {
+    "sales": [],
+    "revenue": [],
+    "weekly": []
+  }
+}

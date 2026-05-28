@@ -38,13 +38,21 @@ function recordCall(callData) {
   // Deduplicate by call ID
   if (log.calls.some(c => c.id === callData.id)) return false;
 
+  // Calculate duration from timestamps since Quo doesn't send a duration field
+  let duration = callData.duration || 0;
+  if (!duration && callData.answeredAt && callData.completedAt) {
+    duration = Math.round((new Date(callData.completedAt) - new Date(callData.answeredAt)) / 1000);
+  } else if (!duration && callData.createdAt && callData.completedAt) {
+    duration = Math.round((new Date(callData.completedAt) - new Date(callData.createdAt)) / 1000);
+  }
+
   log.calls.push({
     id: callData.id,
     userId: callData.userId || null,
     answeredBy: callData.answeredBy || null,
     initiatedBy: callData.initiatedBy || null,
     phoneNumberId: callData.phoneNumberId || null,
-    duration: callData.duration || 0,
+    duration: duration,
     direction: callData.direction || null,
     status: callData.status || null,
     createdAt: callData.createdAt || new Date().toISOString(),

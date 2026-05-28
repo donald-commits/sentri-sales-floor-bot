@@ -33,7 +33,10 @@ app.post('/webhooks/quo/call', (req, res) => {
   const callData = event?.data?.object || event?.data || event;
 
   // Log the actual call data we're extracting
-  console.log('[Webhook] Extracted:', JSON.stringify({ id: callData.id, userId: callData.userId, duration: callData.duration, direction: callData.direction, status: callData.status, answeredBy: callData.answeredBy, initiatedBy: callData.initiatedBy }));
+  const answeredAt = callData.answeredAt ? new Date(callData.answeredAt) : null;
+  const completedAt = callData.completedAt ? new Date(callData.completedAt) : null;
+  const calcDuration = answeredAt && completedAt ? Math.round((completedAt - answeredAt) / 1000) : 0;
+  console.log('[Webhook] Extracted:', JSON.stringify({ id: callData.id, userId: callData.userId, direction: callData.direction, status: callData.status, answeredAt: callData.answeredAt, completedAt: callData.completedAt, calcDuration }));
 
   if (callData?.id) {
     const isNew = recordCall(callData);

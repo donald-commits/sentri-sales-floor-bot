@@ -21,14 +21,18 @@ app.use(express.json());
 
 app.get('/health', (req, res) => res.json({ status: 'ok' }));
 
+// Log ANY webhook for debugging
+app.post('/webhooks/quo/debug', (req, res) => {
+  console.log('[Debug Webhook] FULL PAYLOAD:', JSON.stringify(req.body).substring(0, 2000));
+  res.status(200).json({ received: true });
+});
+
 // Quo sends call.completed events here
 app.post('/webhooks/quo/call', (req, res) => {
   const event = req.body;
 
-  // Log the raw payload structure for debugging
-  console.log('[Webhook] Raw payload keys:', JSON.stringify(Object.keys(event)));
-  if (event?.data) console.log('[Webhook] data keys:', JSON.stringify(Object.keys(event.data)));
-  if (event?.data?.object) console.log('[Webhook] data.object keys:', JSON.stringify(Object.keys(event.data.object)));
+  // Log the FULL data.object payload to see all values
+  console.log('[Webhook] FULL data.object:', JSON.stringify(event?.data?.object));
 
   const callData = event?.data?.object || event?.data || event;
 

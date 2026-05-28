@@ -24,7 +24,16 @@ app.get('/health', (req, res) => res.json({ status: 'ok' }));
 // Quo sends call.completed events here
 app.post('/webhooks/quo/call', (req, res) => {
   const event = req.body;
+
+  // Log the raw payload structure for debugging
+  console.log('[Webhook] Raw payload keys:', JSON.stringify(Object.keys(event)));
+  if (event?.data) console.log('[Webhook] data keys:', JSON.stringify(Object.keys(event.data)));
+  if (event?.data?.object) console.log('[Webhook] data.object keys:', JSON.stringify(Object.keys(event.data.object)));
+
   const callData = event?.data?.object || event?.data || event;
+
+  // Log the actual call data we're extracting
+  console.log('[Webhook] Extracted:', JSON.stringify({ id: callData.id, userId: callData.userId, duration: callData.duration, direction: callData.direction, status: callData.status, answeredBy: callData.answeredBy, initiatedBy: callData.initiatedBy }));
 
   if (callData?.id) {
     const isNew = recordCall(callData);

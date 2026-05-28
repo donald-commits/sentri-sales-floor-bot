@@ -46,7 +46,8 @@ app.post('/webhooks/quo/call', (req, res) => {
     const isNew = recordCall(callData);
     if (isNew) {
       const userId = callData.userId || callData.answeredBy || callData.initiatedBy || 'unknown';
-      console.log(`[Webhook] Call recorded: ${callData.id} | user: ${userId} | ${callData.duration || 0}s | ${callData.direction}`);
+      const mediaDur = callData.media?.[0]?.duration || 0;
+      console.log(`[Webhook] Call recorded: ${callData.id} | user: ${userId} | media_dur: ${mediaDur}s | calc_dur: ${calcDuration}s | ${callData.direction}`);
     }
   }
 

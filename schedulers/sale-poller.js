@@ -1,5 +1,3 @@
-const fs = require('fs');
-const path = require('path');
 const notionStats = require('../services/notion-stats');
 const milestoneTracker = require('../services/milestone-tracker');
 const { getActiveAgents, findByNotionId } = require('../utils/agent-store');
@@ -7,36 +5,43 @@ const { saleEmbed, milestoneEmbed } = require('../utils/embeds');
 const { getWeekStart, getMonthStart } = require('../utils/formatters');
 const config = require('../config');
 
-const ANNOUNCED_FILE = path.join(__dirname, '../data/announced-sales.json');
+// In-memory set — survives across polls but not across deploys.
+// On startup, we query Notion for all sold leads with Initial Paid Date = today
+// and pre-seed this set so we never re-announce after a redeploy.
+let announced = new Set();
+let seeded = false;
 
 /**
- * Load the set of already-announced Notion page IDs.
+ * Seed the announced set with all sales from today on startup.
+ * This prevents re-announcements after a redeploy.
  */
-function loadAnnounced() {
+async function seedAnnounced() {
+  if (seeded) return;
   try {
-    return new Set(JSON.parse(fs.readFileSync(ANNOUNCED_FILE, 'utf8')));
-  } catch {
-    return new Set();
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    const existingSales = await notionStats.getNewSales(todayStart);
+    for (const sale of existingSales) {
+      announced.add(sale.id);
+    }
+    seeded = true;
+    console.log(`[SalePoller] Seeded ${announced.size} existing sales for today (won't re-announce)`);
+  } catch (err) {
+    console.error('[SalePoller] Seed error:', err.message);
   }
 }
 
 /**
- * Save announced page IDs to disk (persists across restarts).
- */
-function saveAnnounced(set) {
-  fs.writeFileSync(ANNOUNCED_FILE, JSON.stringify([...set], null, 2));
-}
-
-/**
  * Poll Notion for new sales and announce them.
- * Uses a persistent set of announced page IDs to prevent duplicates.
- * Only announces sales where Initial Paid Date is today.
+ * Uses in-memory dedup seeded on startup to prevent duplicates across redeploys.
  * @param {Client} client - Discord client
  * @param {string} channelId - Channel to post announcements
  */
 async function pollForSales(client, channelId) {
   try {
-    // Only look for sales with Initial Paid Date = today
+    // On first run, seed with existing sales so we don't re-announce
+    await seedAnnounced();
+
     const todayStart = new Date();
     todayStart.setHours(0, 0, 0, 0);
 
@@ -44,14 +49,13 @@ async function pollForSales(client, channelId) {
 
     if (newSales.length === 0) return;
 
-    const announced = loadAnnounced();
     const channel = await client.channels.fetch(channelId);
     if (!channel) return;
 
     let posted = 0;
 
     for (const sale of newSales) {
-      // Skip if already announced
+      // Skip if already announced (in-memory dedup)
       if (announced.has(sale.id)) continue;
 
       const details = notionStats.extractSaleDetails(sale);
@@ -102,12 +106,10 @@ async function pollForSales(client, channelId) {
       announced.add(sale.id);
       posted++;
 
-      // Small delay between announcements
       await new Promise(r => setTimeout(r, 1000));
     }
 
     if (posted > 0) {
-      saveAnnounced(announced);
       console.log(`[SalePoller] Announced ${posted} new sale(s)`);
     }
   } catch (err) {

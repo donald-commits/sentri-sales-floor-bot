@@ -122,7 +122,16 @@
       "name": "Ivan Nic",
       "discordId": "1506774715602178061",
       "notionUserId": "366d872b-594c-8178-b089-0002732e3fa3",
-      "quoUserId": "",
+      "quoUserId": "USB4WsQITm",
+      "team": "sentri",
+      "role": "agent",
+      "active": true
+    },
+    {
+      "name": "Avery Hammon",
+      "discordId": "1509581580602183801",
+      "notionUserId": "36dd872b-594c-81b0-a174-000296d5378f",
+      "quoUserId": "US23JNZGW0",
       "team": "sentri",
       "role": "agent",
       "active": true

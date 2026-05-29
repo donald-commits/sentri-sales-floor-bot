@@ -87,7 +87,7 @@ async function pollForSales(client, channelId) {
         services: details.services,
       });
 
-      await channel.send({ content: agent.discordId ? `<@${agent.discordId}>` : '', embeds: [embed] });
+      await channel.send({ content: `@here ${agent.discordId ? `<@${agent.discordId}>` : agent.name} just closed!`, embeds: [embed] });
 
       // Check milestones
       const newMilestones = milestoneTracker.checkMilestones(

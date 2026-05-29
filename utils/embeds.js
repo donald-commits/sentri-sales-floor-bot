@@ -2,22 +2,65 @@ const { EmbedBuilder } = require('discord.js');
 const { formatTime, formatMoney, formatPercent, progressEmoji, rankEmoji } = require('./formatters');
 
 /**
+ * Hype messages for sale announcements, randomly selected.
+ */
+const hypeMessages = [
+  'LET\'S GOOOOO!',
+  'MONEY MOVES!',
+  'THAT\'S HOW IT\'S DONE!',
+  'ABSOLUTE KILLER!',
+  'PRINTING MONEY!',
+  'BUILT DIFFERENT!',
+  'CAN\'T BE STOPPED!',
+  'ON A MISSION!',
+  'GET THIS PERSON A RAISE!',
+  'THE CLOSER!',
+];
+
+const newBuildHypeMessages = [
+  'A WHOLE NEW HOME! THIS IS THE BIG LEAGUES!',
+  'NEW BUILD ALERT! WE\'RE BUILDING HOUSES OUT HERE!',
+  'BRAND NEW HOME SOLD! THIS IS WHAT WE DO!',
+  'NEW CONSTRUCTION BABY! THE BAG IS SECURED!',
+  'A FULL NEW HOME BUILD?! ABSOLUTELY LEGENDARY!',
+];
+
+/**
  * Build a sale announcement embed.
  */
 function saleEmbed({ agentName, revenue, weekSales, weekRevenue, monthSales, monthRevenue, clientName, services }) {
+  const isNewBuild = services.some(s =>
+    s.toLowerCase().includes('new home') ||
+    s.toLowerCase().includes('new build') ||
+    s.toLowerCase().includes('new construction') ||
+    s.toLowerCase().includes('full build')
+  );
+
+  const color = isNewBuild ? 0xffd700 : 0x00ff88;
+  const title = isNewBuild
+    ? '\u{1F3E0}\u{1F525} NEW HOME BUILD SOLD! \u{1F525}\u{1F3E0}'
+    : '\u{1F514}\u{1F4B0} SALE CLOSED! \u{1F4B0}\u{1F514}';
+
+  const hypePool = isNewBuild ? newBuildHypeMessages : hypeMessages;
+  const hype = hypePool[Math.floor(Math.random() * hypePool.length)];
+
   const embed = new EmbedBuilder()
-    .setColor(0x00ff88)
-    .setTitle('\u{1F514} SALE CLOSED! \u{1F514}')
-    .setDescription(`\u{1F3C6} **${agentName}** just closed a deal!`)
+    .setColor(color)
+    .setTitle(title)
+    .setDescription(
+      `\u{1F3C6} **${agentName}** just closed a deal!\n\n` +
+      `\u{1F4B0} **${formatMoney(revenue)}** revenue\n\n` +
+      `**${hype}**`
+    )
     .addFields(
-      { name: '\u{1F4B0} Revenue', value: formatMoney(revenue), inline: true },
-      { name: '\u{1F4CA} Week', value: `${weekSales} sales | ${formatMoney(weekRevenue)}`, inline: true },
-      { name: '\u{1F4C8} Month', value: `${monthSales} sales | ${formatMoney(monthRevenue)}`, inline: true },
+      { name: '\u{1F4CA} This Week', value: `**${weekSales}** sales | ${formatMoney(weekRevenue)}`, inline: true },
+      { name: '\u{1F4C8} This Month', value: `**${monthSales}** sales | ${formatMoney(monthRevenue)}`, inline: true },
     )
     .setTimestamp();
 
   if (clientName) {
-    embed.setFooter({ text: `Client: ${clientName} | ${services.join(', ')}` });
+    const serviceStr = services.length > 0 ? ` | ${services.join(', ')}` : '';
+    embed.setFooter({ text: `Client: ${clientName}${serviceStr}` });
   }
 
   return embed;

@@ -1,7 +1,9 @@
 const fs = require('fs');
 const path = require('path');
 
-const STORE_FILE = path.join(__dirname, '../data/call-log.json');
+// Use Railway volume (/data) if available, otherwise local data/ directory
+const DATA_DIR = fs.existsSync('/data') ? '/data' : path.join(__dirname, '../data');
+const STORE_FILE = path.join(DATA_DIR, 'call-log.json');
 
 /**
  * Load today's call log from disk.

@@ -2,7 +2,8 @@ const fs = require('fs');
 const path = require('path');
 const milestones = require('../data/milestones.json');
 
-const TRACKER_FILE = path.join(__dirname, '../data/milestone-history.json');
+const DATA_DIR = fs.existsSync('/data') ? '/data' : path.join(__dirname, '../data');
+const TRACKER_FILE = path.join(DATA_DIR, 'milestone-history.json');
 
 /**
  * Load milestone history (which milestones have already been announced).

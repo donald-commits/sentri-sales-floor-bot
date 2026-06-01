@@ -21,6 +21,25 @@ app.use(express.json());
 
 app.get('/health', (req, res) => res.json({ status: 'ok' }));
 
+// Debug endpoint: return current call stats
+app.get('/debug/call-stats', (req, res) => {
+  const { getTodayStats, loadCallLog } = require('./services/call-store');
+  const { getSentriAgents } = require('./utils/agent-store');
+  const stats = getTodayStats();
+  const agents = getSentriAgents();
+  const log = loadCallLog();
+
+  const result = agents
+    .filter(a => a.quoUserId)
+    .map(a => {
+      const s = stats.get(a.quoUserId) || { calls: 0, talkTimeSeconds: 0 };
+      return { name: a.name, calls: s.calls, talkTimeMinutes: Math.round(s.talkTimeSeconds / 60) };
+    })
+    .sort((a, b) => b.calls - a.calls);
+
+  res.json({ date: log.date, totalCallsInLog: log.calls.length, agents: result });
+});
+
 // Log ANY webhook for debugging
 app.post('/webhooks/quo/debug', (req, res) => {
   console.log('[Debug Webhook] FULL PAYLOAD:', JSON.stringify(req.body).substring(0, 2000));

@@ -37,19 +37,54 @@ function recordCall(callData) {
     log.calls = [];
   }
 
-  // Deduplicate by call ID
-  if (log.calls.some(c => c.id === callData.id)) return false;
+  // Deduplicate: same event ID OR same conversation + user + same minute
+  const existing = log.calls.find(c => c.id === callData.id);
+  if (existing) {
+    // Update duration if new value is higher
+    let newDuration = 0;
+    if (callData.createdAt && callData.completedAt) {
+      newDuration = Math.round((new Date(callData.completedAt) - new Date(callData.createdAt)) / 1000);
+    }
+    if (newDuration > existing.duration) {
+      existing.duration = newDuration;
+      saveCallLog(log);
+    }
+    return false;
+  }
 
-  // Calculate duration: prefer media[0].duration, then timestamps, then callData.duration
+  // Also dedup by conversationId + userId + createdAt (rounded to minute)
+  const convId = callData.conversationId;
+  const userId = callData.userId || callData.answeredBy || callData.initiatedBy;
+  const createdMinute = callData.createdAt ? callData.createdAt.substring(0, 16) : null; // YYYY-MM-DDTHH:MM
+  if (convId && userId && createdMinute) {
+    const dupByConvo = log.calls.find(c =>
+      c.conversationId === convId &&
+      (c.userId === userId || c.answeredBy === userId || c.initiatedBy === userId) &&
+      c.createdAt?.substring(0, 16) === createdMinute
+    );
+    if (dupByConvo) {
+      // Update duration if new value is higher
+      let newDuration = 0;
+      if (callData.createdAt && callData.completedAt) {
+        newDuration = Math.round((new Date(callData.completedAt) - new Date(callData.createdAt)) / 1000);
+      }
+      if (newDuration > dupByConvo.duration) {
+        dupByConvo.duration = newDuration;
+        saveCallLog(log);
+      }
+      return false;
+    }
+  }
+
+  // Calculate duration: use completedAt - createdAt to match Quo's "Time on calls"
+  // This includes ring time + talk time, matching the Quo analytics dashboard
   let duration = 0;
-  if (callData.media && callData.media.length > 0 && callData.media[0].duration) {
-    duration = callData.media[0].duration;
-  } else if (callData.answeredAt && callData.completedAt) {
-    duration = Math.round((new Date(callData.completedAt) - new Date(callData.answeredAt)) / 1000);
-  } else if (callData.createdAt && callData.completedAt) {
+  if (callData.createdAt && callData.completedAt) {
     duration = Math.round((new Date(callData.completedAt) - new Date(callData.createdAt)) / 1000);
   } else if (callData.duration) {
     duration = callData.duration;
+  } else if (callData.media && callData.media.length > 0 && callData.media[0].duration) {
+    duration = callData.media[0].duration;
   }
 
   log.calls.push({
@@ -58,6 +93,7 @@ function recordCall(callData) {
     answeredBy: callData.answeredBy || null,
     initiatedBy: callData.initiatedBy || null,
     phoneNumberId: callData.phoneNumberId || null,
+    conversationId: callData.conversationId || null,
     duration: duration,
     direction: callData.direction || null,
     status: callData.status || null,

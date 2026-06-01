@@ -46,28 +46,20 @@ app.post('/webhooks/quo/debug', (req, res) => {
   res.status(200).json({ received: true });
 });
 
-// Quo sends call.completed events here
+// Quo webhook handler — accepts call.completed, call.recording.completed, call.ringing, etc.
 app.post('/webhooks/quo/call', (req, res) => {
   const event = req.body;
-
-  // Log the FULL data.object payload to see all values
-  console.log('[Webhook] FULL data.object:', JSON.stringify(event?.data?.object));
-
+  const eventType = event?.type || 'unknown';
   const callData = event?.data?.object || event?.data || event;
 
-  // Log the actual call data we're extracting
-  const answeredAt = callData.answeredAt ? new Date(callData.answeredAt) : null;
-  const completedAt = callData.completedAt ? new Date(callData.completedAt) : null;
-  const calcDuration = answeredAt && completedAt ? Math.round((completedAt - answeredAt) / 1000) : 0;
-  console.log('[Webhook] Extracted:', JSON.stringify({ id: callData.id, userId: callData.userId, direction: callData.direction, status: callData.status, answeredAt: callData.answeredAt, completedAt: callData.completedAt, calcDuration }));
-
   if (callData?.id) {
+    const userId = callData.userId || callData.answeredBy || callData.initiatedBy || 'unknown';
+    const createdAt = callData.createdAt ? new Date(callData.createdAt) : null;
+    const completedAt = callData.completedAt ? new Date(callData.completedAt) : null;
+    const dur = createdAt && completedAt ? Math.round((completedAt - createdAt) / 1000) : 0;
+
     const isNew = recordCall(callData);
-    if (isNew) {
-      const userId = callData.userId || callData.answeredBy || callData.initiatedBy || 'unknown';
-      const mediaDur = callData.media?.[0]?.duration || 0;
-      console.log(`[Webhook] Call recorded: ${callData.id} | user: ${userId} | media_dur: ${mediaDur}s | calc_dur: ${calcDuration}s | ${callData.direction}`);
-    }
+    console.log(`[Webhook] ${eventType} | ${callData.id} | user: ${userId} | ${dur}s | ${callData.direction} | ${isNew ? 'NEW' : 'DUP'}`);
   }
 
   res.status(200).json({ received: true });

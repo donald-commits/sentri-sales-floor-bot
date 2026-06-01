@@ -40,6 +40,15 @@ app.get('/debug/call-stats', (req, res) => {
   res.json({ date: log.date, totalCallsInLog: log.calls.length, agents: result });
 });
 
+// Reset call log (admin use only)
+app.post('/debug/reset-calls', (req, res) => {
+  const { saveCallLog } = require('./services/call-store');
+  const today = new Date().toISOString().split('T')[0];
+  saveCallLog({ date: today, calls: [] });
+  console.log('[Debug] Call log reset');
+  res.json({ reset: true, date: today });
+});
+
 // Log ANY webhook for debugging
 app.post('/webhooks/quo/debug', (req, res) => {
   console.log('[Debug Webhook] FULL PAYLOAD:', JSON.stringify(req.body).substring(0, 2000));

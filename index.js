@@ -213,3 +213,21 @@ client.on('error', (err) => {
 
 // ─── Login ──────────────────────────────────────────────────────────
 client.login(config.discord.token);
+
+// Debug: show raw call log entries grouped by userId
+app.get('/debug/raw-calls', (req, res) => {
+  const { loadCallLog } = require('./services/call-store');
+  const log = loadCallLog();
+  
+  // Group by userId
+  const byUser = {};
+  const unknownUsers = new Set();
+  for (const c of log.calls) {
+    const uid = c.userId || c.answeredBy || c.initiatedBy || 'unknown';
+    if (!byUser[uid]) byUser[uid] = { calls: 0, totalDuration: 0 };
+    byUser[uid].calls++;
+    byUser[uid].totalDuration += c.duration || 0;
+  }
+  
+  res.json({ date: log.date, totalCalls: log.calls.length, byUser, sampleCalls: log.calls.slice(-5) });
+});

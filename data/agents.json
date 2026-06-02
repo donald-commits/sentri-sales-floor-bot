@@ -80,7 +80,7 @@
       "quoUserId": "USwyeqtA74",
       "team": "sentri",
       "role": "agent",
-      "active": true
+      "active": false
     },
     {
       "name": "Madelyn Staddon",
@@ -89,7 +89,7 @@
       "quoUserId": "USyX1XQLjl",
       "team": "sentri",
       "role": "agent",
-      "active": true
+      "active": false
     },
     {
       "name": "Jasmine Cruz",

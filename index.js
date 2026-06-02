@@ -155,6 +155,7 @@ function startSchedulers() {
   const { runDailySalesBoard } = require('./schedulers/daily-sales-board');
   const { runMonthlyLeaderboard } = require('./schedulers/monthly-leaderboard');
   const { runDailyRecap } = require('./schedulers/daily-recap');
+  const { syncSalesTracker } = require('./schedulers/sheet-sync');
 
   const tz = config.timezone;
 
@@ -195,6 +196,18 @@ function startSchedulers() {
     runMonthlyLeaderboard(client, channelIds['leaderboards']);
   });
 
+  // Sales tracker sheet sync — every hour, 7 AM to 8 PM CT
+  new Cron('0 7-20 * * *', { timezone: tz }, () => {
+    console.log('[Scheduler] Running sales tracker sheet sync...');
+    syncSalesTracker().catch(err => console.error('[SheetSync] Error:', err.message));
+  });
+
+  // Also run once on startup (after 30s delay to let everything initialize)
+  setTimeout(() => {
+    console.log('[Scheduler] Running initial sales tracker sheet sync...');
+    syncSalesTracker().catch(err => console.error('[SheetSync] Error:', err.message));
+  }, 30000);
+
   console.log('[Scheduler] Cron jobs registered:');
   console.log('  - Sale poller: every 3 min');
   console.log('  - Noon call check: DISABLED');
@@ -202,6 +215,7 @@ function startSchedulers() {
   console.log('  - Weekly sales board: 6:00 PM CT weekdays');
   console.log('  - Monthly leaderboard: Monday 8:00 AM CT');
   console.log('  - Daily recap: DISABLED');
+  console.log('  - Sheet sync: hourly 7AM-8PM CT + on startup');
 }
 
 // ─── Error handling ─────────────────────────────────────────────────

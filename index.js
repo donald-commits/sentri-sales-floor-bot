@@ -163,17 +163,25 @@ function startSchedulers() {
     pollForSales(client, channelIds['sales-announcements']);
   }, config.polling.salesCheck);
 
+  // ── DISABLED until call data is verified accurate ──
   // Noon call check — 12:00 PM CT, weekdays
-  new Cron('0 12 * * 1-5', { timezone: tz }, () => {
-    console.log('[Scheduler] Running noon call check...');
-    runNoonCheck(client, channelIds['accountability']);
-  });
+  // new Cron('0 12 * * 1-5', { timezone: tz }, () => {
+  //   console.log('[Scheduler] Running noon call check...');
+  //   runNoonCheck(client, channelIds['accountability']);
+  // });
 
   // EOD call check — 5:00 PM CT, weekdays
-  new Cron('0 17 * * 1-5', { timezone: tz }, () => {
-    console.log('[Scheduler] Running EOD call check...');
-    runEodCheck(client, channelIds['accountability']);
-  });
+  // new Cron('0 17 * * 1-5', { timezone: tz }, () => {
+  //   console.log('[Scheduler] Running EOD call check...');
+  //   runEodCheck(client, channelIds['accountability']);
+  // });
+
+  // Daily recap — 5:00 PM MST weekdays
+  // new Cron('0 17 * * 1-5', { timezone: 'America/Denver' }, () => {
+  //   console.log('[Scheduler] Running daily recap...');
+  //   runDailyRecap(client, channelIds['wins-and-goals']);
+  // });
+  // ── END DISABLED ──
 
   // Daily (weekday) sales leaderboard — 6:00 PM CT, weekdays
   new Cron('0 18 * * 1-5', { timezone: tz }, () => {
@@ -187,19 +195,13 @@ function startSchedulers() {
     runMonthlyLeaderboard(client, channelIds['leaderboards']);
   });
 
-  // Daily recap — 5:00 PM MST weekdays
-  new Cron('0 17 * * 1-5', { timezone: 'America/Denver' }, () => {
-    console.log('[Scheduler] Running daily recap...');
-    runDailyRecap(client, channelIds['wins-and-goals']);
-  });
-
   console.log('[Scheduler] Cron jobs registered:');
   console.log('  - Sale poller: every 3 min');
-  console.log('  - Noon call check: 12:00 PM CT weekdays');
-  console.log('  - EOD call check: 5:00 PM CT weekdays');
+  console.log('  - Noon call check: DISABLED');
+  console.log('  - EOD call check: DISABLED');
   console.log('  - Weekly sales board: 6:00 PM CT weekdays');
   console.log('  - Monthly leaderboard: Monday 8:00 AM CT');
-  console.log('  - Daily recap: 5:00 PM MST weekdays');
+  console.log('  - Daily recap: DISABLED');
 }
 
 // ─── Error handling ─────────────────────────────────────────────────

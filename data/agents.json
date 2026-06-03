@@ -125,6 +125,15 @@
       "quoUserId": "USB4WsQITm",
       "team": "sentri",
       "role": "agent",
+      "active": false
+    },
+    {
+      "name": "Alan Dawson",
+      "discordId": "1503856507840892939",
+      "notionUserId": "36cd872b-594c-8121-ae85-0002a07fcb44",
+      "quoUserId": "US8qsWZ6NV",
+      "team": "sentri",
+      "role": "agent",
       "active": true
     },
     {

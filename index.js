@@ -221,11 +221,6 @@ function startSchedulers() {
     syncSalesTracker().catch(err => console.error('[SheetSync] Error:', err.message));
   }, 30000);
 
-  // Fire EOD bid check now for verification (remove after confirmed)
-  setTimeout(() => {
-    console.log('[Scheduler] Firing one-time EOD bid check for verification...');
-    runBidCheck(client, channelIds['accountability'], 'END OF DAY BID CHECK');
-  }, 15000);
 
   console.log('[Scheduler] Cron jobs registered:');
   console.log('  - Sale poller: every 3 min');

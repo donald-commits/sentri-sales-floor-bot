@@ -11,7 +11,7 @@ const BID_TARGET = 5;
  */
 async function runBidCheck(client, channelId, title = 'BID SENT CHECK') {
   try {
-    const agents = getActiveAgents();
+    const agents = getActiveAgents().filter(a => a.team !== 'admin');
     const todayStr = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Denver' });
 
     const bidStats = [];

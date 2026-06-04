@@ -15,10 +15,7 @@ const config = require('../config');
 const SPREADSHEET_ID = '1tp5wEk0W-RVn_x_MaH8w0hPh40ISNGGw26IKfv6DBOw';
 const SHEET_NAME = 'Weekly Tracking';
 
-// Google OAuth credentials — on Railway, set these as env vars
-const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
-const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
-const GOOGLE_REFRESH_TOKEN = process.env.GOOGLE_REFRESH_TOKEN;
+// Google OAuth credentials — read at runtime from env vars (Railway) or local file
 
 // Agent display names → Notion people IDs
 const AGENTS = [
@@ -127,10 +124,10 @@ async function queryAllPages(filter) {
 
 // ── Google OAuth ────────────────────────────────────────
 async function getAccessToken() {
-  // Try env vars first (Railway), fall back to local credentials file
-  let clientId = GOOGLE_CLIENT_ID;
-  let clientSecret = GOOGLE_CLIENT_SECRET;
-  let refreshToken = GOOGLE_REFRESH_TOKEN;
+  // Read env vars at call time (not module load time) so Railway vars are available
+  let clientId = process.env.GOOGLE_CLIENT_ID;
+  let clientSecret = process.env.GOOGLE_CLIENT_SECRET;
+  let refreshToken = process.env.GOOGLE_REFRESH_TOKEN;
 
   if (!clientId || !clientSecret || !refreshToken) {
     try {
@@ -140,6 +137,12 @@ async function getAccessToken() {
       clientSecret = creds.client_secret;
       refreshToken = creds.refresh_token;
     } catch {
+      console.error('[SheetSync] Debug — env check:', {
+        hasClientId: !!process.env.GOOGLE_CLIENT_ID,
+        hasSecret: !!process.env.GOOGLE_CLIENT_SECRET,
+        hasRefresh: !!process.env.GOOGLE_REFRESH_TOKEN,
+        envKeys: Object.keys(process.env).filter(k => k.startsWith('GOOGLE')),
+      });
       throw new Error('No Google credentials found — set GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_REFRESH_TOKEN env vars');
     }
   }

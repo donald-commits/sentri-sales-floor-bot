@@ -10,7 +10,8 @@ const STORE_FILE = path.join(DATA_DIR, 'call-log.json');
  * Structure: { date: "YYYY-MM-DD", calls: [ { id, userId, duration, direction, status, createdAt } ] }
  */
 function loadCallLog() {
-  const todayStr = new Date().toISOString().split('T')[0];
+  // Use Mountain Time for day boundary (not UTC)
+  const todayStr = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Denver' });
   try {
     const data = JSON.parse(fs.readFileSync(STORE_FILE, 'utf8'));
     if (data.date === todayStr) return data;
@@ -31,7 +32,8 @@ function recordCall(callData) {
   const log = loadCallLog();
 
   // Reset if it's a new day
-  const todayStr = new Date().toISOString().split('T')[0];
+  // Use Mountain Time for day boundary (not UTC)
+  const todayStr = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Denver' });
   if (log.date !== todayStr) {
     log.date = todayStr;
     log.calls = [];
@@ -110,7 +112,8 @@ function recordCall(callData) {
  */
 function getTodayStats() {
   const log = loadCallLog();
-  const todayStr = new Date().toISOString().split('T')[0];
+  // Use Mountain Time for day boundary (not UTC)
+  const todayStr = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Denver' });
 
   // If log is from a different day, return empty
   if (log.date !== todayStr) return new Map();

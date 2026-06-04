@@ -156,6 +156,7 @@ function startSchedulers() {
   const { runMonthlyLeaderboard } = require('./schedulers/monthly-leaderboard');
   const { runDailyRecap } = require('./schedulers/daily-recap');
   const { syncSalesTracker } = require('./schedulers/sheet-sync');
+  const { runBidCheck } = require('./schedulers/bid-check');
 
   const tz = config.timezone;
 
@@ -196,6 +197,18 @@ function startSchedulers() {
     runMonthlyLeaderboard(client, channelIds['leaderboards']);
   });
 
+  // Midday bid check — 12:00 PM MST, weekdays
+  new Cron('0 12 * * 1-5', { timezone: 'America/Denver' }, () => {
+    console.log('[Scheduler] Running midday bid check...');
+    runBidCheck(client, channelIds['accountability'], 'MIDDAY BID CHECK');
+  });
+
+  // EOD bid check — 5:00 PM MST, weekdays
+  new Cron('0 17 * * 1-5', { timezone: 'America/Denver' }, () => {
+    console.log('[Scheduler] Running EOD bid check...');
+    runBidCheck(client, channelIds['accountability'], 'END OF DAY BID CHECK');
+  });
+
   // Sales tracker sheet sync — every hour, 7 AM to 8 PM CT
   new Cron('0 7-20 * * *', { timezone: tz }, () => {
     console.log('[Scheduler] Running sales tracker sheet sync...');
@@ -208,6 +221,12 @@ function startSchedulers() {
     syncSalesTracker().catch(err => console.error('[SheetSync] Error:', err.message));
   }, 30000);
 
+  // Fire EOD bid check now for verification (remove after confirmed)
+  setTimeout(() => {
+    console.log('[Scheduler] Firing one-time EOD bid check for verification...');
+    runBidCheck(client, channelIds['accountability'], 'END OF DAY BID CHECK');
+  }, 15000);
+
   console.log('[Scheduler] Cron jobs registered:');
   console.log('  - Sale poller: every 3 min');
   console.log('  - Noon call check: DISABLED');
@@ -215,6 +234,8 @@ function startSchedulers() {
   console.log('  - Weekly sales board: 6:00 PM CT weekdays');
   console.log('  - Monthly leaderboard: Monday 8:00 AM CT');
   console.log('  - Daily recap: DISABLED');
+  console.log('  - Midday bid check: 12:00 PM MST weekdays');
+  console.log('  - EOD bid check: 5:00 PM MST weekdays');
   console.log('  - Sheet sync: hourly 7AM-8PM CT + on startup');
 }
 

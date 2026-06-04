@@ -94,7 +94,7 @@
     {
       "name": "Jasmine Cruz",
       "discordId": "1508862335908053194",
-      "notionUserId": "",
+      "notionUserId": "36cd872b-594c-8179-a7ab-0002da77ad1b",
       "quoUserId": "USNykMJFhi",
       "team": "sentri",
       "role": "agent",
@@ -126,6 +126,15 @@
       "team": "sentri",
       "role": "agent",
       "active": false
+    },
+    {
+      "name": "Ada Taylor",
+      "discordId": "1509619942650155018",
+      "notionUserId": "36ed872b-594c-81f1-9814-0002d0347bab",
+      "quoUserId": "USc7r5OjzZ",
+      "team": "sentri",
+      "role": "agent",
+      "active": true
     },
     {
       "name": "Alan Dawson",

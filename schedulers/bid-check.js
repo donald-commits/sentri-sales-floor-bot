@@ -63,7 +63,7 @@ async function runBidCheck(client, channelId, title = 'BID SENT CHECK') {
       )
       .setTimestamp();
 
-    await channel.send({ embeds: [embed] });
+    await channel.send({ content: '@everyone', embeds: [embed] });
     console.log(`[BidCheck] Posted ${title}, ${bidStats.length} agents tracked`);
   } catch (err) {
     console.error('[BidCheck] Error:', err.message);

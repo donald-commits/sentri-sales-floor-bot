@@ -179,11 +179,11 @@ function startSchedulers() {
   // });
 
   // Daily recap — 5:00 PM MST weekdays
-  // new Cron('0 17 * * 1-5', { timezone: 'America/Denver' }, () => {
-  //   console.log('[Scheduler] Running daily recap...');
-  //   runDailyRecap(client, channelIds['wins-and-goals']);
-  // });
-  // ── END DISABLED ──
+  new Cron('0 17 * * 1-5', { timezone: 'America/Denver' }, () => {
+    console.log('[Scheduler] Running daily recap...');
+    runDailyRecap(client, channelIds['wins-and-goals']);
+  });
+  // ── END DISABLED (call checks only) ──
 
   // Daily (weekday) sales leaderboard — 6:00 PM CT, weekdays
   new Cron('0 18 * * 1-5', { timezone: tz }, () => {

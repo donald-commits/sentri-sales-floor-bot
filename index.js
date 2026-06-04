@@ -157,6 +157,7 @@ function startSchedulers() {
   const { runDailyRecap } = require('./schedulers/daily-recap');
   const { syncSalesTracker } = require('./schedulers/sheet-sync');
   const { runBidCheck } = require('./schedulers/bid-check');
+  const { syncAgentsFromRoles } = require('./schedulers/agent-sync');
 
   const tz = config.timezone;
 
@@ -215,10 +216,18 @@ function startSchedulers() {
     syncSalesTracker().catch(err => console.error('[SheetSync] Error:', err.message));
   });
 
-  // Also run once on startup (after 30s delay to let everything initialize)
+  // Agent role sync — 7:00 AM MST daily
+  new Cron('0 7 * * *', { timezone: 'America/Denver' }, () => {
+    console.log('[Scheduler] Running daily agent role sync...');
+    syncAgentsFromRoles(client);
+  });
+
+  // Run on startup (after 30s delay to let everything initialize)
   setTimeout(() => {
     console.log('[Scheduler] Running initial sales tracker sheet sync...');
     syncSalesTracker().catch(err => console.error('[SheetSync] Error:', err.message));
+    console.log('[Scheduler] Running initial agent role sync...');
+    syncAgentsFromRoles(client);
   }, 30000);
 
 
@@ -231,6 +240,7 @@ function startSchedulers() {
   console.log('  - Daily recap: DISABLED');
   console.log('  - Midday bid check: 12:00 PM MST weekdays');
   console.log('  - EOD bid check: 5:00 PM MST weekdays');
+  console.log('  - Agent role sync: 7:00 AM MST daily + on startup');
   console.log('  - Sheet sync: hourly 7AM-8PM CT + on startup');
 }
 

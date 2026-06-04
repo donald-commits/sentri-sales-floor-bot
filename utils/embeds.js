@@ -115,15 +115,14 @@ function salesLeaderboardEmbed(stats, weekLabel) {
   const lines = stats.map((agent, i) => {
     const rank = rankEmoji(i);
     const mention = agent.discordId ? `<@${agent.discordId}>` : agent.name;
-    return `${rank} ${mention} — **${agent.sales}** sales | ${formatPercent(agent.conversionRate)} conv | ${formatMoney(agent.revenue)}`;
+    return `${rank} ${mention} — **${agent.sales}** sales | ${formatMoney(agent.revenue)}`;
   });
 
-  const topCloser = stats.reduce((a, b) => a.conversionRate > b.conversionRate ? a : b, stats[0]);
   const topRevenue = stats.reduce((a, b) => a.revenue > b.revenue ? a : b, stats[0]);
 
   let footer = '';
-  if (topCloser && topRevenue) {
-    footer = `\n\nTop closer: **${topCloser.name}** (${formatPercent(topCloser.conversionRate)}) \u{1F3AF}\nTop revenue: **${topRevenue.name}** (${formatMoney(topRevenue.revenue)}) \u{1F4B0}`;
+  if (topRevenue) {
+    footer = `\n\nTop revenue: **${topRevenue.name}** (${formatMoney(topRevenue.revenue)}) \u{1F4B0}`;
   }
 
   return new EmbedBuilder()

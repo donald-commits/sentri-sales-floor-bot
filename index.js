@@ -17,7 +17,7 @@ try {
 
 // ─── Express server for Quo webhooks ────────────────────────────────
 const app = express();
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
 
 app.get('/health', (req, res) => res.json({ status: 'ok' }));
 
@@ -38,6 +38,35 @@ app.get('/debug/call-stats', (req, res) => {
     .sort((a, b) => b.calls - a.calls);
 
   res.json({ date: log.date, totalCallsInLog: log.calls.length, agents: result });
+});
+
+// Upload Chrome cookies for Quo scraper (one-time seed)
+app.post('/debug/upload-cookies', (req, res) => {
+  const fs = require('fs');
+  const DATA_DIR = fs.existsSync('/data') ? '/data' : path.join(__dirname, 'data');
+  const PROFILE_DIR = path.join(DATA_DIR, 'chrome-profile', 'Default');
+
+  // Ensure directory exists
+  fs.mkdirSync(PROFILE_DIR, { recursive: true });
+
+  // Save cookies
+  const cookiesFile = path.join(DATA_DIR, 'quo-cookies.json');
+  fs.writeFileSync(cookiesFile, JSON.stringify(req.body, null, 2));
+  console.log('[Debug] Uploaded', req.body.length, 'cookies');
+  res.json({ saved: true, count: req.body.length });
+});
+
+// Trigger a manual Quo scrape
+app.post('/debug/scrape-quo', async (req, res) => {
+  const { scrapeQuoAnalytics } = require('./schedulers/quo-scraper');
+  const success = await scrapeQuoAnalytics();
+  res.json({ success });
+});
+
+// Get scraped Quo stats
+app.get('/debug/quo-stats', (req, res) => {
+  const { loadScrapedStats } = require('./schedulers/quo-scraper');
+  res.json(loadScrapedStats());
 });
 
 // Reset call log (admin use only)
@@ -158,6 +187,7 @@ function startSchedulers() {
   const { syncSalesTracker } = require('./schedulers/sheet-sync');
   const { runBidCheck } = require('./schedulers/bid-check');
   const { syncAgentsFromRoles } = require('./schedulers/agent-sync');
+  const { scrapeQuoAnalytics } = require('./schedulers/quo-scraper');
 
   const tz = config.timezone;
 
@@ -166,25 +196,31 @@ function startSchedulers() {
     pollForSales(client, channelIds['sales-announcements']);
   }, config.polling.salesCheck);
 
-  // ── DISABLED until call data is verified accurate ──
-  // Noon call check — 12:00 PM CT, weekdays
-  // new Cron('0 12 * * 1-5', { timezone: tz }, () => {
-  //   console.log('[Scheduler] Running noon call check...');
-  //   runNoonCheck(client, channelIds['accountability']);
-  // });
+  // Quo analytics scraper — every 30 min during work hours (8 AM - 6 PM MST, weekdays)
+  new Cron('*/30 8-17 * * 1-5', { timezone: 'America/Denver' }, () => {
+    console.log('[Scheduler] Scraping Quo analytics...');
+    scrapeQuoAnalytics().catch(err => console.error('[QuoScraper] Error:', err.message));
+  });
 
-  // EOD call check — 5:00 PM CT, weekdays
-  // new Cron('0 17 * * 1-5', { timezone: tz }, () => {
-  //   console.log('[Scheduler] Running EOD call check...');
-  //   runEodCheck(client, channelIds['accountability']);
-  // });
+  // Noon call check — 12:00 PM MST, weekdays (scrape first, then post)
+  new Cron('5 12 * * 1-5', { timezone: 'America/Denver' }, async () => {
+    console.log('[Scheduler] Running noon call check...');
+    await scrapeQuoAnalytics();
+    runNoonCheck(client, channelIds['accountability']);
+  });
 
-  // Daily recap — 5:00 PM MST weekdays
-  new Cron('0 17 * * 1-5', { timezone: 'America/Denver' }, () => {
+  // EOD call check — 5:00 PM MST, weekdays (scrape first, then post)
+  new Cron('5 17 * * 1-5', { timezone: 'America/Denver' }, async () => {
+    console.log('[Scheduler] Running EOD call check...');
+    await scrapeQuoAnalytics();
+    runEodCheck(client, channelIds['accountability']);
+  });
+
+  // Daily recap — 5:10 PM MST weekdays (after EOD check)
+  new Cron('10 17 * * 1-5', { timezone: 'America/Denver' }, () => {
     console.log('[Scheduler] Running daily recap...');
     runDailyRecap(client, channelIds['wins-and-goals']);
   });
-  // ── END DISABLED (call checks only) ──
 
   // Daily (weekday) sales leaderboard — 6:00 PM CT, weekdays
   new Cron('0 18 * * 1-5', { timezone: tz }, () => {
@@ -233,13 +269,14 @@ function startSchedulers() {
 
   console.log('[Scheduler] Cron jobs registered:');
   console.log('  - Sale poller: every 3 min');
-  console.log('  - Noon call check: DISABLED');
-  console.log('  - EOD call check: DISABLED');
-  console.log('  - Weekly sales board: 6:00 PM CT weekdays');
-  console.log('  - Monthly leaderboard: Monday 8:00 AM CT');
-  console.log('  - Daily recap: DISABLED');
+  console.log('  - Quo scraper: every 30 min 8AM-6PM MST weekdays');
+  console.log('  - Noon call check: 12:05 PM MST weekdays');
+  console.log('  - EOD call check: 5:05 PM MST weekdays');
+  console.log('  - Daily recap: 5:10 PM MST weekdays');
   console.log('  - Midday bid check: 12:00 PM MST weekdays');
   console.log('  - EOD bid check: 5:00 PM MST weekdays');
+  console.log('  - Weekly sales board: 6:00 PM CT weekdays');
+  console.log('  - Monthly leaderboard: Monday 8:00 AM CT');
   console.log('  - Agent role sync: 7:00 AM MST daily + on startup');
   console.log('  - Sheet sync: hourly 7AM-8PM CT + on startup');
 }

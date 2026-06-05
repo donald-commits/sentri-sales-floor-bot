@@ -3,7 +3,6 @@
  * Runs on Railway with headless Chrome.
  * Saves call stats to /data/quo-scraped-stats.json on the persistent volume.
  */
-const puppeteer = require('puppeteer');
 const path = require('path');
 const fs = require('fs');
 
@@ -106,6 +105,8 @@ async function scrapeQuoAnalytics() {
       launchOptions.userDataDir = PROFILE_DIR;
     }
 
+    // Lazy-load puppeteer (not installed on Railway, only runs locally)
+    const puppeteer = require('puppeteer');
     browser = await puppeteer.launch(launchOptions);
 
     const page = await browser.newPage();

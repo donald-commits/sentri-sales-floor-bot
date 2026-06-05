@@ -56,11 +56,14 @@ app.post('/debug/upload-cookies', (req, res) => {
   res.json({ saved: true, count: req.body.length });
 });
 
-// Trigger a manual Quo scrape
-app.post('/debug/scrape-quo', async (req, res) => {
-  const { scrapeQuoAnalytics } = require('./schedulers/quo-scraper');
-  const success = await scrapeQuoAnalytics();
-  res.json({ success });
+// Receive scraped Quo stats from local scraper
+app.post('/debug/upload-quo-stats', (req, res) => {
+  const { date, users } = req.body;
+  if (!date || !users) return res.status(400).json({ error: 'Need date and users' });
+  const DATA_DIR = fs.existsSync('/data') ? '/data' : path.join(__dirname, 'data');
+  fs.writeFileSync(path.join(DATA_DIR, 'quo-scraped-stats.json'), JSON.stringify(req.body, null, 2));
+  console.log(`[QuoStats] Received scraped data: ${users.length} users for ${date}`);
+  res.json({ saved: true, users: users.length });
 });
 
 // Get scraped Quo stats
@@ -187,7 +190,6 @@ function startSchedulers() {
   const { syncSalesTracker } = require('./schedulers/sheet-sync');
   const { runBidCheck } = require('./schedulers/bid-check');
   const { syncAgentsFromRoles } = require('./schedulers/agent-sync');
-  const { scrapeQuoAnalytics } = require('./schedulers/quo-scraper');
 
   const tz = config.timezone;
 
@@ -196,23 +198,15 @@ function startSchedulers() {
     pollForSales(client, channelIds['sales-announcements']);
   }, config.polling.salesCheck);
 
-  // Quo analytics scraper — every 30 min during work hours (8 AM - 6 PM MST, weekdays)
-  new Cron('*/30 8-17 * * 1-5', { timezone: 'America/Denver' }, () => {
-    console.log('[Scheduler] Scraping Quo analytics...');
-    scrapeQuoAnalytics().catch(err => console.error('[QuoScraper] Error:', err.message));
-  });
-
-  // Noon call check — 12:00 PM MST, weekdays (scrape first, then post)
-  new Cron('5 12 * * 1-5', { timezone: 'America/Denver' }, async () => {
+  // Noon call check — 12:05 PM MST, weekdays (reads scraped data)
+  new Cron('5 12 * * 1-5', { timezone: 'America/Denver' }, () => {
     console.log('[Scheduler] Running noon call check...');
-    await scrapeQuoAnalytics();
     runNoonCheck(client, channelIds['accountability']);
   });
 
-  // EOD call check — 5:00 PM MST, weekdays (scrape first, then post)
-  new Cron('5 17 * * 1-5', { timezone: 'America/Denver' }, async () => {
+  // EOD call check — 5:05 PM MST, weekdays (reads scraped data)
+  new Cron('5 17 * * 1-5', { timezone: 'America/Denver' }, () => {
     console.log('[Scheduler] Running EOD call check...');
-    await scrapeQuoAnalytics();
     runEodCheck(client, channelIds['accountability']);
   });
 

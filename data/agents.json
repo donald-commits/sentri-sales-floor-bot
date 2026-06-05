@@ -128,6 +128,15 @@
       "active": false
     },
     {
+      "name": "George Lazo",
+      "discordId": "620732889251840001",
+      "notionUserId": "372d872b-594c-8165-8dfe-0002e7163af3",
+      "quoUserId": "USeAfygu9u",
+      "team": "sentri",
+      "role": "agent",
+      "active": true
+    },
+    {
       "name": "Ada Taylor",
       "discordId": "1509619942650155018",
       "notionUserId": "36ed872b-594c-81f1-9814-0002d0347bab",

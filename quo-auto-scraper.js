@@ -34,12 +34,16 @@ async function scrapeAndUpload() {
     }
 
     await new Promise(r => setTimeout(r, 8000));
+    console.log('Page loaded:', page.url());
 
     // Paginate and extract
     const allUsers = [];
     let hasMore = true;
+    let pageNum = 1;
+    const MAX_PAGES = 10;
 
-    while (hasMore) {
+    while (hasMore && pageNum <= MAX_PAGES) {
+      console.log('Extracting page', pageNum, '...');
       const pageData = await page.evaluate(() => {
         const text = document.body.innerText;
         const lines = text.split('\n').map(l => l.trim()).filter(l => l);
@@ -81,21 +85,33 @@ async function scrapeAndUpload() {
         return { users, hasNext: currentEnd < total };
       });
 
+      console.log('  Found', pageData.users.length, 'users, hasNext:', pageData.hasNext);
       allUsers.push(...pageData.users);
 
       if (pageData.hasNext) {
-        await page.evaluate(() => {
-          const buttons = document.querySelectorAll('button');
-          const nextBtn = Array.from(buttons).find(b =>
-            b.textContent.includes('›') || b.getAttribute('aria-label')?.includes('next') || b.textContent.includes('>')
-          );
-          if (nextBtn) nextBtn.click();
+        const clicked = await page.evaluate(() => {
+          // Find the next page arrow button (right arrow ›)
+          const allBtns = document.querySelectorAll('button, [role="button"]');
+          for (const btn of allBtns) {
+            const text = btn.textContent?.trim();
+            const aria = btn.getAttribute('aria-label') || '';
+            if (text === '›' || text === '>' || aria.toLowerCase().includes('next')) {
+              btn.click();
+              return true;
+            }
+          }
+          // Try SVG arrow buttons
+          const svgBtns = document.querySelectorAll('svg');
+          return false;
         });
+        if (!clicked) { console.log('  Could not find next button'); hasMore = false; break; }
         await new Promise(r => setTimeout(r, 3000));
+        pageNum++;
       } else {
         hasMore = false;
       }
     }
+    console.log('Total raw users extracted:', allUsers.length);
 
     await browser.close();
 

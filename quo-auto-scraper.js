@@ -33,8 +33,40 @@ async function scrapeAndUpload() {
       process.exit(1);
     }
 
-    await new Promise(r => setTimeout(r, 8000));
+    await new Promise(r => setTimeout(r, 5000));
     console.log('Page loaded:', page.url());
+
+    // Make sure "Today" filter is selected
+    try {
+      await page.evaluate(() => {
+        // Look for a "Today" button or filter
+        const buttons = document.querySelectorAll('button, [role="button"], [role="tab"]');
+        for (const btn of buttons) {
+          if (btn.textContent?.trim() === 'Today') {
+            btn.click();
+            return true;
+          }
+        }
+        // Also try clicking any date picker that says "Today"
+        const links = document.querySelectorAll('a, span, div');
+        for (const el of links) {
+          if (el.textContent?.trim() === 'Today' && el.onclick) {
+            el.click();
+            return true;
+          }
+        }
+        return false;
+      });
+      console.log('Clicked Today filter');
+      await new Promise(r => setTimeout(r, 5000));
+    } catch (e) {
+      console.log('Could not find Today filter:', e.message);
+    }
+
+    // Screenshot for debugging
+    const screenshotPath = path.join(__dirname, 'data', 'quo-debug-screenshot.png');
+    await page.screenshot({ path: screenshotPath, fullPage: false });
+    console.log('Debug screenshot saved');
 
     // Paginate and extract
     const allUsers = [];

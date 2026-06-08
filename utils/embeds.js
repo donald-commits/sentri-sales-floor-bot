@@ -68,8 +68,21 @@ function saleEmbed({ agentName, revenue, weekSales, weekRevenue, monthSales, mon
 
 /**
  * Build a milestone embed.
+ * @param {string} type - 'regular' or 'homeBuild'
  */
-function milestoneEmbed(agentName, milestoneMessage) {
+function milestoneEmbed(agentName, milestoneMessage, type = 'regular') {
+  if (type === 'homeBuild') {
+    return new EmbedBuilder()
+      .setColor(0xff4500)
+      .setTitle('\u{1F3D7}\uFE0F\u{1F525}\u{1F451} HOME BUILD MILESTONE \u{1F451}\u{1F525}\u{1F3D7}\uFE0F')
+      .setDescription(
+        `\u{1F3C6} **${agentName}** \u{1F3C6}\n\n` +
+        `**${milestoneMessage}**\n\n` +
+        `\u{1F3E0} Building homes. Building wealth. Building legacy. \u{1F3E0}`
+      )
+      .setTimestamp();
+  }
+
   return new EmbedBuilder()
     .setColor(0xffd700)
     .setTitle('\u{1F31F} MILESTONE UNLOCKED \u{1F31F}')

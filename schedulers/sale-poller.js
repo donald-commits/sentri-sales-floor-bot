@@ -89,16 +89,24 @@ async function pollForSales(client, channelId) {
 
       await channel.send({ content: `@here ${agent.discordId ? `<@${agent.discordId}>` : agent.name} just closed!`, embeds: [embed] });
 
-      // Check milestones
+      // Check milestones — home builds get separate treatment
+      const isHomeBuild = details.services.some(s =>
+        s.toLowerCase().includes('new home') ||
+        s.toLowerCase().includes('new build') ||
+        s.toLowerCase().includes('new construction') ||
+        s.toLowerCase().includes('full build')
+      );
+
       const newMilestones = milestoneTracker.checkMilestones(
         agent.name,
         totalSales,
         weekStats.sales,
         details.revenue,
+        isHomeBuild,
       );
 
-      for (const msg of newMilestones) {
-        const mEmbed = milestoneEmbed(agent.name, msg);
+      for (const m of newMilestones) {
+        const mEmbed = milestoneEmbed(agent.name, m.message, m.type);
         await channel.send({ embeds: [mEmbed] });
       }
 

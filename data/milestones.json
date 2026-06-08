@@ -12,6 +12,19 @@
     { "amount": 25000, "message": "$25K DEAL! That's a fat one!" },
     { "amount": 50000, "message": "$50K SALE?! MONSTER DEAL!" }
   ],
+  "homeBuildRevenue": [
+    { "amount": 100000, "message": "SIX-FIGURE HOME BUILD! $100K+ — this is the big leagues!" },
+    { "amount": 250000, "message": "QUARTER MILLION DOLLAR HOME! This agent is building empires!" },
+    { "amount": 500000, "message": "HALF A MILLION DOLLAR BUILD! Absolutely elite. Generational closer!" },
+    { "amount": 750000, "message": "THREE QUARTERS OF A MILLION! Are you even real right now?!" },
+    { "amount": 1000000, "message": "MILLION DOLLAR HOME BUILD! You just entered legendary status. Hall of fame!" }
+  ],
+  "homeBuildCount": [
+    { "count": 1, "message": "FIRST HOME BUILD SOLD! You just changed the game!" },
+    { "count": 3, "message": "3 HOME BUILDS! You're not just selling — you're building a legacy!" },
+    { "count": 5, "message": "5 HOME BUILDS SOLD! You're a full-blown home builder now!" },
+    { "count": 10, "message": "10 HOME BUILDS! Developer status unlocked!" }
+  ],
   "weekly": [
     { "count": 5, "message": "5-SALE WEEK! On fire!" },
     { "count": 10, "message": "10-SALE WEEK! ABSOLUTELY UNSTOPPABLE!" }

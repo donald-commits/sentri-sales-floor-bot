@@ -128,6 +128,33 @@
       "active": false
     },
     {
+      "name": "Alison Shivnen",
+      "discordId": "1511888763947581440",
+      "notionUserId": "373d872b-594c-813e-b473-0002577c94ba",
+      "quoUserId": "USz4tamqbd",
+      "team": "sentri",
+      "role": "agent",
+      "active": true
+    },
+    {
+      "name": "Jonathan Cruz",
+      "discordId": "1511954455640408134",
+      "notionUserId": "373d872b-594c-8118-9e3a-0002ff50dfd8",
+      "quoUserId": "USJjGJjOZk",
+      "team": "sentri",
+      "role": "agent",
+      "active": true
+    },
+    {
+      "name": "Christopher Fryer",
+      "discordId": "1512117292236800050",
+      "notionUserId": "373d872b-594c-8153-b507-000259b2cd40",
+      "quoUserId": "USUatMA2dg",
+      "team": "sentri",
+      "role": "agent",
+      "active": true
+    },
+    {
       "name": "George Lazo",
       "discordId": "620732889251840001",
       "notionUserId": "372d872b-594c-8165-8dfe-0002e7163af3",

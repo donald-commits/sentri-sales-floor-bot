@@ -72,6 +72,16 @@ app.get('/debug/quo-stats', (req, res) => {
   res.json(loadScrapedStats());
 });
 
+// Seed announced sales (prevents re-announcements)
+app.post('/debug/seed-announced', (req, res) => {
+  const { ids, date } = req.body;
+  if (!ids || !date) return res.status(400).json({ error: 'Need ids and date' });
+  const DATA_DIR = fs.existsSync('/data') ? '/data' : path.join(__dirname, 'data');
+  fs.writeFileSync(path.join(DATA_DIR, 'announced-sales.json'), JSON.stringify({ date, ids }, null, 2));
+  console.log(`[Debug] Seeded ${ids.length} announced sales for ${date}`);
+  res.json({ seeded: ids.length });
+});
+
 // Reset call log (admin use only)
 app.post('/debug/reset-calls', (req, res) => {
   const { saveCallLog } = require('./services/call-store');

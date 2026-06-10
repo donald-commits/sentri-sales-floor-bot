@@ -44,7 +44,7 @@
       "quoUserId": "USh26Pn0CX",
       "team": "plusone",
       "role": "agent",
-      "active": true
+      "active": false
     },
     {
       "name": "Jeanette Zimmerman",
@@ -53,7 +53,7 @@
       "quoUserId": "US2ey4tLcA",
       "team": "plusone",
       "role": "agent",
-      "active": true
+      "active": false
     },
     {
       "name": "Verla Hammon",
@@ -62,7 +62,7 @@
       "quoUserId": "USyRYx4Bzr",
       "team": "plusone",
       "role": "agent",
-      "active": true
+      "active": false
     },
     {
       "name": "James Spencer",
@@ -71,7 +71,7 @@
       "quoUserId": "US0Eaf2lZV",
       "team": "plusone",
       "role": "agent",
-      "active": true
+      "active": false
     },
     {
       "name": "Jade Lebaron",
@@ -116,7 +116,7 @@
       "quoUserId": "",
       "team": "sentri",
       "role": "agent",
-      "active": true
+      "active": false
     },
     {
       "name": "Ivan Nic",
@@ -143,7 +143,7 @@
       "quoUserId": "USJjGJjOZk",
       "team": "sentri",
       "role": "agent",
-      "active": true
+      "active": false
     },
     {
       "name": "Christopher Fryer",

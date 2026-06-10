@@ -246,18 +246,17 @@ function startSchedulers() {
     syncSalesTracker().catch(err => console.error('[SheetSync] Error:', err.message));
   });
 
-  // Agent role sync — 7:00 AM MST daily
-  new Cron('0 7 * * *', { timezone: 'America/Denver' }, () => {
-    console.log('[Scheduler] Running daily agent role sync...');
-    syncAgentsFromRoles(client);
-  });
+  // Agent role sync DISABLED — was causing duplicates
+  // new Cron('0 7 * * *', { timezone: 'America/Denver' }, () => {
+  //   syncAgentsFromRoles(client);
+  // });
 
   // Run on startup (after 30s delay to let everything initialize)
   setTimeout(() => {
     console.log('[Scheduler] Running initial sales tracker sheet sync...');
     syncSalesTracker().catch(err => console.error('[SheetSync] Error:', err.message));
-    console.log('[Scheduler] Running initial agent role sync...');
-    syncAgentsFromRoles(client);
+    // Agent role sync disabled — was causing duplicates
+    // syncAgentsFromRoles(client);
   }, 30000);
 
 

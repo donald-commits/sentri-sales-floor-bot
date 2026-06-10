@@ -1,29 +1,26 @@
-const quoStats = require('../services/quo-stats');
-const { getSentriAgents } = require('../utils/agent-store');
+const { getCallStatsForDate } = require('../services/call-log-stats');
+const { getActiveAgents } = require('../utils/agent-store');
 const { callLeaderboardEmbed, accountabilityDmEmbed } = require('../utils/embeds');
 const config = require('../config');
 
 /**
  * Post the midday call/talk time leaderboard and DM lagging agents.
- * @param {Client} client - Discord client
- * @param {string} channelId - Channel to post leaderboard
  */
 async function runNoonCheck(client, channelId) {
   try {
-    const agents = getSentriAgents();
-    const stats = await quoStats.getAgentCallStats(agents);
+    const agents = getActiveAgents();
+    const stats = await getCallStatsForDate(agents);
 
     if (stats.length === 0) {
-      console.log('[NoonCheck] No active agents with Quo IDs — skipping');
+      console.log('[NoonCheck] No active agents — skipping');
       return;
     }
 
-    // Post leaderboard to channel
     const channel = await client.channels.fetch(channelId);
     if (!channel) return;
 
     const embed = callLeaderboardEmbed(stats, 'MIDDAY CALL CHECK');
-    await channel.send({ embeds: [embed] });
+    await channel.send({ content: '@everyone', embeds: [embed] });
 
     // DM agents who are severely behind
     for (const agent of stats) {

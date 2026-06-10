@@ -1,6 +1,6 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const { getActiveAgents, getSentriAgents } = require('../utils/agent-store');
-const quoStats = require('../services/quo-stats');
+const { getCallStatsForDate } = require('../services/call-log-stats');
 const notionStats = require('../services/notion-stats');
 const { callLeaderboardEmbed } = require('../utils/embeds');
 const { getWeekStart, getMonthStart, formatTime, formatMoney, formatPercent, rankEmoji } = require('../utils/formatters');
@@ -65,13 +65,13 @@ module.exports = {
 
     // ─── Call-based leaderboards (Sentri only) ──────────────────
     if (type === 'calls') {
-      const stats = await quoStats.getAgentCallStats(sentriAgents);
+      const stats = await getCallStatsForDate(allAgents);
       const embed = callLeaderboardEmbed(stats, 'LIVE CALL LEADERBOARD');
       return interaction.editReply({ embeds: [embed] });
     }
 
     if (type === 'talktime') {
-      const stats = await quoStats.getAgentCallStats(sentriAgents);
+      const stats = await getCallStatsForDate(allAgents);
       stats.sort((a, b) => b.talkTimeMinutes - a.talkTimeMinutes);
       const embed = buildRankedEmbed(stats,
         '\u{1F399}\uFE0F TALK TIME LEADERBOARD \u{1F399}\uFE0F', 0x3498db, 'Today',

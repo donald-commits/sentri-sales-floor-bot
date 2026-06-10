@@ -1,30 +1,27 @@
-const quoStats = require('../services/quo-stats');
-const { getSentriAgents } = require('../utils/agent-store');
-const { callLeaderboardEmbed, accountabilityDmEmbed } = require('../utils/embeds');
+const { getCallStatsForDate } = require('../services/call-log-stats');
+const { getActiveAgents } = require('../utils/agent-store');
+const { callLeaderboardEmbed } = require('../utils/embeds');
 const { EmbedBuilder } = require('discord.js');
 const { formatTime } = require('../utils/formatters');
 const config = require('../config');
 
 /**
  * Post end-of-day call check with final numbers.
- * @param {Client} client - Discord client
- * @param {string} channelId - Channel to post
  */
 async function runEodCheck(client, channelId) {
   try {
-    const agents = getSentriAgents();
-    const stats = await quoStats.getAgentCallStats(agents);
+    const agents = getActiveAgents();
+    const stats = await getCallStatsForDate(agents);
 
     if (stats.length === 0) return;
 
     const channel = await client.channels.fetch(channelId);
     if (!channel) return;
 
-    // Post the final leaderboard
     const embed = callLeaderboardEmbed(stats, 'END OF DAY FINAL NUMBERS');
-    await channel.send({ embeds: [embed] });
+    await channel.send({ content: '@everyone', embeds: [embed] });
 
-    // Post a summary of who hit vs missed
+    // Summary: who hit vs missed
     const hitTarget = stats.filter(a => a.calls >= config.targets.callsPerDay && a.talkTimeMinutes >= config.targets.talkTimeMinutes);
     const missed = stats.filter(a => a.calls < config.targets.callsPerDay || a.talkTimeMinutes < config.targets.talkTimeMinutes);
 

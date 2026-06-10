@@ -198,13 +198,17 @@ function startSchedulers() {
     pollForSales(client, channelIds['sales-announcements']);
   }, config.polling.salesCheck);
 
-  // Call checks DISABLED — Quo scraper data not reliable
-  // new Cron('5 12 * * 1-5', { timezone: 'America/Denver' }, () => {
-  //   runNoonCheck(client, channelIds['accountability']);
-  // });
-  // new Cron('5 17 * * 1-5', { timezone: 'America/Denver' }, () => {
-  //   runEodCheck(client, channelIds['accountability']);
-  // });
+  // Noon call check — 12:00 PM MDT, weekdays
+  new Cron('0 12 * * 1-5', { timezone: 'America/Denver' }, () => {
+    console.log('[Scheduler] Running noon call check...');
+    runNoonCheck(client, channelIds['accountability']);
+  });
+
+  // EOD call check — 5:00 PM MDT, weekdays
+  new Cron('0 17 * * 1-5', { timezone: 'America/Denver' }, () => {
+    console.log('[Scheduler] Running EOD call check...');
+    runEodCheck(client, channelIds['accountability']);
+  });
 
   // Daily recap — 5:10 PM MST weekdays (after EOD check)
   new Cron('10 17 * * 1-5', { timezone: 'America/Denver' }, () => {

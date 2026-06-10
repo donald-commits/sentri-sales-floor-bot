@@ -1,6 +1,6 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const { findByDiscordId } = require('../utils/agent-store');
-const quoStats = require('../services/quo-stats');
+const { getCallStatsForDate } = require('../services/call-log-stats');
 const notionStats = require('../services/notion-stats');
 const { formatTime, formatMoney, formatPercent, getWeekStart, getMonthStart } = require('../utils/formatters');
 
@@ -31,28 +31,24 @@ module.exports = {
     // Single Notion query — compute all periods from one result set
     const allStats = await notionStats.getAgentStatsAllPeriods(agent.notionUserId, weekStart, monthStart);
 
-    // Quo call stats (only if agent has Quo ID)
+    // Call stats from Notion call log
     let calls = { calls: 0, talkTimeMinutes: 0 };
-    if (agent.quoUserId) {
-      try {
-        const callResults = await quoStats.getAgentCallStats([agent]);
-        calls = callResults[0] || calls;
-      } catch (e) {
-        // Quo failed, show stats without calls
-      }
+    try {
+      const callResults = await getCallStatsForDate([agent]);
+      calls = callResults[0] || calls;
+    } catch (e) {
+      // Call log query failed, show stats without calls
     }
 
     const embed = new EmbedBuilder()
       .setColor(0x3498db)
       .setTitle(`\u{1F4CA} Stats — ${agent.name}`);
 
-    if (agent.quoUserId) {
-      embed.addFields({
-        name: '\u{1F4DE} Today',
-        value: `**${calls.calls}**/50 calls | **${formatTime(calls.talkTimeMinutes)}**/2h talk time`,
-        inline: false,
-      });
-    }
+    embed.addFields({
+      name: '\u{1F4DE} Today',
+      value: `**${calls.calls}**/50 calls | **${formatTime(calls.talkTimeMinutes)}**/2h talk time`,
+      inline: false,
+    });
 
     const w = allStats.week;
     embed.addFields({

@@ -59,7 +59,10 @@ async function pollForSales(client, channelId) {
       if (announced.has(sale.id)) continue;
 
       const details = notionStats.extractSaleDetails(sale);
-      const agent = findByNotionId(details.agentNotionId);
+      // Find agent — check all agents (active or not) since we announce all sales
+      const { loadAgents } = require('../utils/agent-store');
+      const allAgents = loadAgents();
+      const agent = allAgents.find(a => a.notionUserId === details.agentNotionId);
       if (!agent) continue;
 
       // Verify Initial Paid Date is actually today

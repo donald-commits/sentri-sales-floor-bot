@@ -226,7 +226,7 @@ async function syncSalesTracker() {
       // Sales (Initial Paid Date in week)
       const salesPages = await queryAllPages({
         and: [
-          { property: 'Sales Agent', people: { contains: agent.notionId } },
+          { property: '~%7BhH', people: { contains: agent.notionId } },
           { property: 'Initial Paid Date', date: { on_or_after: week.start } },
           { property: 'Initial Paid Date', date: { on_or_before: week.end } },
         ],
@@ -237,7 +237,7 @@ async function syncSalesTracker() {
       // Contacted (Contacted Date in week)
       const contactedPages = await queryAllPages({
         and: [
-          { property: 'Sales Agent', people: { contains: agent.notionId } },
+          { property: '~%7BhH', people: { contains: agent.notionId } },
           { property: 'Contacted Date', date: { on_or_after: week.start } },
           { property: 'Contacted Date', date: { on_or_before: week.end } },
         ],
@@ -247,7 +247,7 @@ async function syncSalesTracker() {
       // Bids (Bid Sent Date in week)
       const bidPages = await queryAllPages({
         and: [
-          { property: 'Sales Agent', people: { contains: agent.notionId } },
+          { property: '~%7BhH', people: { contains: agent.notionId } },
           { property: 'Bid Sent Date', date: { on_or_after: week.start } },
           { property: 'Bid Sent Date', date: { on_or_before: week.end } },
         ],

@@ -19,7 +19,6 @@ const SHEET_NAME = 'Weekly Tracking';
 
 // Agent display names → Notion people IDs
 const AGENTS = [
-  { display: 'Lucio',            notionId: '360d872b-594c-81ee-8956-0002162c50cf' },
   { display: 'Manny (Emmanuel)', notionId: '360d872b-594c-81cf-a045-0002cdaa4b38' },
   { display: 'Jasmine',          notionId: '36cd872b-594c-8179-a7ab-0002da77ad1b' },
   { display: 'Akiami',           notionId: '368d872b-594c-81ce-b6c4-0002b0290080' },

@@ -25,6 +25,7 @@ const AGENTS = [
   { display: 'Avery',            notionId: '36dd872b-594c-81b0-a174-000296d5378f' },
   { display: 'Shez',             notionId: '317d872b-594c-81b9-af88-0002411b9da8' },
   { display: 'Mahonri',          notionId: '36ed872b-594c-81f6-8748-0002835632af' },
+  { display: 'Alison',           notionId: '373d872b-594c-813e-b473-0002577c94ba' },
 ];
 
 // Metric row offsets within each agent block (must match build-sales-tracker.js)

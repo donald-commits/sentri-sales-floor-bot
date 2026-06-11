@@ -17,19 +17,23 @@ const SHEET_NAME = 'Weekly Tracking';
 
 // Google OAuth credentials — read at runtime from env vars (Railway) or local file
 
-// Agent display names → Notion people IDs
+// Agent display names → Notion people IDs + Call Log rep names
 const AGENTS = [
-  { display: 'Manny (Emmanuel)', notionId: '360d872b-594c-81cf-a045-0002cdaa4b38' },
-  { display: 'Jasmine',          notionId: '36cd872b-594c-8179-a7ab-0002da77ad1b' },
-  { display: 'Akiami',           notionId: '368d872b-594c-81ce-b6c4-0002b0290080' },
-  { display: 'Avery',            notionId: '36dd872b-594c-81b0-a174-000296d5378f' },
-  { display: 'Shez',             notionId: '317d872b-594c-81b9-af88-0002411b9da8' },
-  { display: 'Mahonri',          notionId: '36ed872b-594c-81f6-8748-0002835632af' },
-  { display: 'Alison',           notionId: '373d872b-594c-813e-b473-0002577c94ba' },
+  { display: 'Manny (Emmanuel)', notionId: '360d872b-594c-81cf-a045-0002cdaa4b38', callLogRep: 'Emmanuel Marquez' },
+  { display: 'Jasmine',          notionId: '36cd872b-594c-8179-a7ab-0002da77ad1b', callLogRep: 'Jasmine Cruz' },
+  { display: 'Akiami',           notionId: '368d872b-594c-81ce-b6c4-0002b0290080', callLogRep: 'Akiami Byrd' },
+  { display: 'Avery',            notionId: '36dd872b-594c-81b0-a174-000296d5378f', callLogRep: 'Avery Hammon' },
+  { display: 'Shez',             notionId: '317d872b-594c-81b9-af88-0002411b9da8', callLogRep: 'Shez Barlow' },
+  { display: 'Mahonri',          notionId: '36ed872b-594c-81f6-8748-0002835632af', callLogRep: 'Mahonri Barlow' },
+  { display: 'Alison',           notionId: '373d872b-594c-813e-b473-0002577c94ba', callLogRep: 'Alison Shivnen' },
 ];
+
+const CALL_LOG_DB_ID = 'b3809080-3268-48c9-a1e4-f137bf76a6e6';
 
 // Metric row offsets within each agent block (must match build-sales-tracker.js)
 const METRIC_ROWS = {
+  'Calls':             0,
+  'Hours on Phone':    1,
   'Revenue Sold':      2,
   'Number of Sales':   3,
   'Leads Contacted':   4,
@@ -92,7 +96,8 @@ function httpRequest(hostname, reqPath, method, headers, body) {
 }
 
 // ── Notion query with pagination + retry ────────────────
-async function queryAllPages(filter) {
+async function queryAllPages(filter, dbId) {
+  const database = dbId || config.notion.leadsDbId;
   const pages = [];
   let hasMore = true, cursor;
   while (hasMore) {
@@ -103,7 +108,7 @@ async function queryAllPages(filter) {
     for (let attempt = 0; attempt < 3; attempt++) {
       result = await httpRequest(
         'api.notion.com',
-        `/v1/databases/${config.notion.leadsDbId}/query`,
+        `/v1/databases/${database}/query`,
         'POST',
         { 'Authorization': `Bearer ${config.notion.apiKey}`, 'Notion-Version': '2022-06-28' },
         body
@@ -121,6 +126,19 @@ async function queryAllPages(filter) {
     cursor = result.next_cursor;
   }
   return pages;
+}
+
+// Determine which week index is the "current" week
+function getCurrentWeekIndex() {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  for (let i = 0; i < WEEKS.length; i++) {
+    const sun = new Date(WEEKS[i].start + 'T00:00:00');
+    const sat = new Date(WEEKS[i].end + 'T00:00:00');
+    sat.setHours(23, 59, 59);
+    if (today >= sun && today <= sat) return i;
+  }
+  return -1;
 }
 
 // ── Google OAuth ────────────────────────────────────────
@@ -207,6 +225,8 @@ async function syncSalesTracker() {
 
   const token = await getAccessToken();
   const updates = [];
+  const currentWeekIdx = getCurrentWeekIndex();
+  console.log(`[SheetSync]   Current week index: ${currentWeekIdx}`);
 
   for (let a = 0; a < AGENTS.length; a++) {
     const agent = AGENTS[a];
@@ -223,6 +243,28 @@ async function syncSalesTracker() {
       if (weekStart > today) continue;
 
       const weekCol = colLetter(3 + w);
+      const sheetRow = (row0) => row0 + 1;
+
+      // ── Call data (only current week — past weeks are already accurate) ──
+      if (w === currentWeekIdx && agent.callLogRep) {
+        const callPages = await queryAllPages({
+          and: [
+            { property: 'Rep', select: { equals: agent.callLogRep } },
+            { property: 'Call Date', date: { on_or_after: week.start } },
+            { property: 'Call Date', date: { on_or_before: week.end } },
+          ],
+        }, CALL_LOG_DB_ID);
+
+        const numCalls = callPages.length;
+        const totalDurationSec = callPages.reduce((sum, p) => sum + (p.properties['Duration (s)']?.number || 0), 0);
+        // Convert seconds to hours.minutes (e.g. 5400s = 1h30m = 1.30)
+        const totalHours = Math.floor(totalDurationSec / 3600);
+        const totalMinutes = Math.floor((totalDurationSec % 3600) / 60);
+        const hoursOnPhone = totalHours + (totalMinutes / 100);
+
+        updates.push({ range: `'${SHEET_NAME}'!${weekCol}${sheetRow(metricsStart + METRIC_ROWS['Calls'])}`, values: [[numCalls]] });
+        updates.push({ range: `'${SHEET_NAME}'!${weekCol}${sheetRow(metricsStart + METRIC_ROWS['Hours on Phone'])}`, values: [[hoursOnPhone]] });
+      }
 
       // Sales (Initial Paid Date in week)
       const salesPages = await queryAllPages({
@@ -258,8 +300,6 @@ async function syncSalesTracker() {
       // Ratios
       const contactToBid = numContacted > 0 ? numBids / numContacted : 0;
       const bidToSale = numBids > 0 ? numSales / numBids : 0;
-
-      const sheetRow = (row0) => row0 + 1; // 0-indexed → 1-indexed
 
       for (const { metric, value } of [
         { metric: 'Revenue Sold',      value: revenue },

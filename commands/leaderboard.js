@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
-const { getActiveAgents, getSentriAgents } = require('../utils/agent-store');
+const { getActiveAgents } = require('../utils/agent-store');
 const { getCallStatsForDate } = require('../services/call-log-stats');
 const notionStats = require('../services/notion-stats');
 const { callLeaderboardEmbed } = require('../utils/embeds');
@@ -60,8 +60,7 @@ module.exports = {
     await interaction.deferReply();
 
     const type = interaction.options.getString('type');
-    const allAgents = getActiveAgents();
-    const sentriAgents = getSentriAgents();
+    const allAgents = getActiveAgents().filter(a => a.team !== 'admin');
 
     // ─── Call-based leaderboards (Sentri only) ──────────────────
     if (type === 'calls') {

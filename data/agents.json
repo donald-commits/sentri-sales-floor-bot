@@ -44,7 +44,7 @@
       "quoUserId": "USh26Pn0CX",
       "team": "plusone",
       "role": "agent",
-      "active": false
+      "active": true
     },
     {
       "name": "Jeanette Zimmerman",
@@ -53,7 +53,7 @@
       "quoUserId": "US2ey4tLcA",
       "team": "plusone",
       "role": "agent",
-      "active": false
+      "active": true
     },
     {
       "name": "Verla Hammon",
@@ -62,7 +62,7 @@
       "quoUserId": "USyRYx4Bzr",
       "team": "plusone",
       "role": "agent",
-      "active": false
+      "active": true
     },
     {
       "name": "James Spencer",
@@ -71,7 +71,7 @@
       "quoUserId": "US0Eaf2lZV",
       "team": "plusone",
       "role": "agent",
-      "active": false
+      "active": true
     },
     {
       "name": "Jade Lebaron",

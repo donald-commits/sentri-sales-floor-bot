@@ -384,7 +384,7 @@ async function syncSalesTracker() {
   }
 
   console.log(`[SheetSync]   Writing ${updates.length} cells to sheet...`);
-  await sheetsApi(token, 'POST', '/values:batchUpdate', { valueInputOption: 'RAW', data: updates });
+  await sheetsApi(token, 'POST', '/values:batchUpdate', { valueInputOption: 'USER_ENTERED', data: updates });
 
   const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
   console.log(`[SheetSync] Sync complete in ${elapsed}s — ${updates.length} cells updated.`);

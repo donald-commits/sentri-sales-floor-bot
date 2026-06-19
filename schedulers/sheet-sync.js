@@ -245,11 +245,8 @@ async function syncSalesTracker() {
     for (let w = 0; w < WEEKS.length; w++) {
       const week = WEEKS[w];
 
-      // Skip future weeks
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const weekStart = new Date(week.start + 'T00:00:00');
-      if (weekStart > today) continue;
+      // Only sync current week — skip past and future weeks
+      if (w !== currentWeekIdx) continue;
 
       const weekCol = colLetter(3 + w);
       const sheetRow = (row0) => row0 + 1;

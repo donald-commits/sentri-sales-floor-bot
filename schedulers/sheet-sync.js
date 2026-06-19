@@ -32,17 +32,21 @@ const CALL_LOG_DB_ID = 'b3809080-3268-48c9-a1e4-f137bf76a6e6';
 
 // Metric row offsets within each agent block (must match build-sales-tracker.js)
 const METRIC_ROWS = {
-  'Calls':             0,
-  'Hours on Phone':    1,
-  'Revenue Sold':      2,
-  'Number of Sales':   3,
-  'Leads Contacted':   4,
-  'Bids Sent':         5,
-  'Contact-to-Bid %':  6,
-  'Bid-to-Sale %':     7,
+  'Revenue Sold':            0,
+  'Number of Sales':         1,
+  'Total Leads Taken':       2,
+  'Leads Contacted':         3,
+  'Bids Sent':               4,
+  'Contact-to-Bid %':        5,
+  'Bid-to-Sale %':           6,
+  'Conversion Rate %':       7,
+  'Avg Talk Time / Convo':   8,
 };
 
-const NUM_METRICS = 10;
+const NUM_METRICS = 11;
+
+// New metrics only tracked from week index 3 onward (6/21-6/27)
+const NEW_METRICS_START_WEEK = 3;
 
 // ── Week boundaries (Sun-Sat, 13 weeks from May 31 2026) ─
 function generateWeekBounds() {
@@ -245,27 +249,6 @@ async function syncSalesTracker() {
       const weekCol = colLetter(3 + w);
       const sheetRow = (row0) => row0 + 1;
 
-      // ── Call data (only current week — past weeks are already accurate) ──
-      if (w === currentWeekIdx && agent.callLogRep) {
-        const callPages = await queryAllPages({
-          and: [
-            { property: 'Rep', select: { equals: agent.callLogRep } },
-            { property: 'Call Date', date: { on_or_after: week.start } },
-            { property: 'Call Date', date: { on_or_before: week.end } },
-          ],
-        }, CALL_LOG_DB_ID);
-
-        const numCalls = callPages.length;
-        const totalDurationSec = callPages.reduce((sum, p) => sum + (p.properties['Duration (s)']?.number || 0), 0);
-        // Convert seconds to hours.minutes (e.g. 5400s = 1h30m = 1.30)
-        const totalHours = Math.floor(totalDurationSec / 3600);
-        const totalMinutes = Math.floor((totalDurationSec % 3600) / 60);
-        const hoursOnPhone = totalHours + (totalMinutes / 100);
-
-        updates.push({ range: `'${SHEET_NAME}'!${weekCol}${sheetRow(metricsStart + METRIC_ROWS['Calls'])}`, values: [[numCalls]] });
-        updates.push({ range: `'${SHEET_NAME}'!${weekCol}${sheetRow(metricsStart + METRIC_ROWS['Hours on Phone'])}`, values: [[hoursOnPhone]] });
-      }
-
       // Sales (Initial Paid Date in week)
       const salesPages = await queryAllPages({
         and: [
@@ -301,14 +284,57 @@ async function syncSalesTracker() {
       const contactToBid = numContacted > 0 ? numBids / numContacted : 0;
       const bidToSale = numBids > 0 ? numSales / numBids : 0;
 
-      for (const { metric, value } of [
+      // Always-synced metrics
+      const cellUpdates = [
         { metric: 'Revenue Sold',      value: revenue },
         { metric: 'Number of Sales',   value: numSales },
         { metric: 'Leads Contacted',   value: numContacted },
         { metric: 'Bids Sent',         value: numBids },
         { metric: 'Contact-to-Bid %',  value: contactToBid },
         { metric: 'Bid-to-Sale %',     value: bidToSale },
-      ]) {
+      ];
+
+      // New metrics — only sync from week 3 onward (6/21+)
+      if (w >= NEW_METRICS_START_WEEK) {
+        // Total Leads Taken (Sales Agent Assigned Date in week)
+        const leadsAssigned = await queryAllPages({
+          and: [
+            { property: '~%7BhH', people: { contains: agent.notionId } },
+            { property: 'Sales Agent Assigned Date', date: { on_or_after: week.start } },
+            { property: 'Sales Agent Assigned Date', date: { on_or_before: week.end } },
+          ],
+        });
+        const numLeadsTaken = leadsAssigned.length;
+
+        // Conversion Rate (Sales / Leads Taken)
+        const conversionRate = numLeadsTaken > 0 ? numSales / numLeadsTaken : 0;
+
+        // Avg Talk Time per Conversation (calls > 1 min, in minutes)
+        let avgTalkTime = 0;
+        if (agent.callLogRep) {
+          const callPages = await queryAllPages({
+            and: [
+              { property: 'Rep', select: { equals: agent.callLogRep } },
+              { property: 'Call Date', date: { on_or_after: week.start } },
+              { property: 'Call Date', date: { on_or_before: week.end } },
+              { property: 'Duration (s)', number: { greater_than: 60 } },
+            ],
+          }, CALL_LOG_DB_ID);
+
+          if (callPages.length > 0) {
+            const totalSec = callPages.reduce((sum, p) => sum + (p.properties['Duration (s)']?.number || 0), 0);
+            avgTalkTime = (totalSec / callPages.length) / 60; // in minutes
+          }
+        }
+
+        cellUpdates.push(
+          { metric: 'Total Leads Taken',       value: numLeadsTaken },
+          { metric: 'Conversion Rate %',       value: conversionRate },
+          { metric: 'Avg Talk Time / Convo',   value: avgTalkTime },
+        );
+      }
+
+      for (const { metric, value } of cellUpdates) {
         const row1 = sheetRow(metricsStart + METRIC_ROWS[metric]);
         updates.push({ range: `'${SHEET_NAME}'!${weekCol}${row1}`, values: [[value]] });
       }

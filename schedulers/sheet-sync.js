@@ -46,6 +46,8 @@ const METRIC_ROWS = {
   'Conversion Rate %':       10,
   'Answer Rate %':           11,
   'Avg Talk Time / Convo':   12,
+  // Calls Listened To = 13 (manual)
+  // Call Reviews Done = 14 (manual)
 };
 
 const NUM_METRICS = 15;

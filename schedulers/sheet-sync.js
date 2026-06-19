@@ -34,18 +34,20 @@ const CALL_LOG_DB_ID = 'b3809080-3268-48c9-a1e4-f137bf76a6e6';
 // Metric row offsets within each agent block (must match build-sales-tracker.js)
 const METRIC_ROWS = {
   'Revenue Sold':            0,
-  'Number of Sales':         1,
-  'Total Leads Taken':       2,
-  'Leads Contacted':         3,
-  'Bids Sent':               4,
-  'Contact-to-Bid %':        5,
-  'Bid-to-Sale %':           6,
-  'Conversion Rate %':       7,
-  'Answer Rate %':           8,
-  'Avg Talk Time / Convo':   9,
+  'Revenue Collected':       1,
+  'Total Commissions':       2,
+  'Number of Sales':         3,
+  'Total Leads Taken':       4,
+  'Leads Contacted':         5,
+  'Bids Sent':               6,
+  'Contact-to-Bid %':        7,
+  'Bid-to-Sale %':           8,
+  'Conversion Rate %':       9,
+  'Answer Rate %':           10,
+  'Avg Talk Time / Convo':   11,
 };
 
-const NUM_METRICS = 12;
+const NUM_METRICS = 14;
 
 // New metrics only tracked from week index 3 onward (6/21-6/27)
 const NEW_METRICS_START_WEEK = 3;
@@ -282,18 +284,51 @@ async function syncSalesTracker() {
       });
       const numBids = bidPages.length;
 
+      // Revenue Collected: Initial + Final + Misc paid amounts in this week
+      const initialPaid = await queryAllPages({
+        and: [
+          { property: '~%7BhH', people: { contains: agent.notionId } },
+          { property: 'Initial Paid Date', date: { on_or_after: week.start } },
+          { property: 'Initial Paid Date', date: { on_or_before: week.end } },
+        ],
+      });
+      const initialRevenue = initialPaid.reduce((sum, p) => sum + (p.properties['Initial Amount']?.number || 0), 0);
+
+      const finalPaid = await queryAllPages({
+        and: [
+          { property: '~%7BhH', people: { contains: agent.notionId } },
+          { property: 'Final Paid Date', date: { on_or_after: week.start } },
+          { property: 'Final Paid Date', date: { on_or_before: week.end } },
+        ],
+      });
+      const finalRevenue = finalPaid.reduce((sum, p) => sum + (p.properties['Final Amount']?.number || 0), 0);
+
+      const miscPaid = await queryAllPages({
+        and: [
+          { property: '~%7BhH', people: { contains: agent.notionId } },
+          { property: 'Misc Paid Date', date: { on_or_after: week.start } },
+          { property: 'Misc Paid Date', date: { on_or_before: week.end } },
+        ],
+      });
+      const miscRevenue = miscPaid.reduce((sum, p) => sum + (p.properties['Misc Amount']?.number || 0), 0);
+
+      const revenueCollected = initialRevenue + finalRevenue + miscRevenue;
+      const totalCommissions = revenueCollected * 0.05;
+
       // Ratios
       const contactToBid = numContacted > 0 ? numBids / numContacted : 0;
       const bidToSale = numBids > 0 ? numSales / numBids : 0;
 
       // Always-synced metrics
       const cellUpdates = [
-        { metric: 'Revenue Sold',      value: revenue },
-        { metric: 'Number of Sales',   value: numSales },
-        { metric: 'Leads Contacted',   value: numContacted },
-        { metric: 'Bids Sent',         value: numBids },
-        { metric: 'Contact-to-Bid %',  value: contactToBid },
-        { metric: 'Bid-to-Sale %',     value: bidToSale },
+        { metric: 'Revenue Sold',        value: revenue },
+        { metric: 'Revenue Collected',   value: revenueCollected },
+        { metric: 'Total Commissions',   value: totalCommissions },
+        { metric: 'Number of Sales',     value: numSales },
+        { metric: 'Leads Contacted',     value: numContacted },
+        { metric: 'Bids Sent',           value: numBids },
+        { metric: 'Contact-to-Bid %',    value: contactToBid },
+        { metric: 'Bid-to-Sale %',       value: bidToSale },
       ];
 
       // New metrics — only sync from week 3 onward (6/21+)

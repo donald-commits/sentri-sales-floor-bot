@@ -37,17 +37,18 @@ const METRIC_ROWS = {
   'Revenue Collected':       1,
   'Total Commissions':       2,
   'Number of Sales':         3,
-  'Total Leads Taken':       4,
-  'Leads Contacted':         5,
-  'Bids Sent':               6,
-  'Contact-to-Bid %':        7,
-  'Bid-to-Sale %':           8,
-  'Conversion Rate %':       9,
-  'Answer Rate %':           10,
-  'Avg Talk Time / Convo':   11,
+  'Revenue per Sale':        4,
+  'Total Leads Taken':       5,
+  'Leads Contacted':         6,
+  'Bids Sent':               7,
+  'Contact-to-Bid %':        8,
+  'Bid-to-Sale %':           9,
+  'Conversion Rate %':       10,
+  'Answer Rate %':           11,
+  'Avg Talk Time / Convo':   12,
 };
 
-const NUM_METRICS = 14;
+const NUM_METRICS = 15;
 
 // New metrics only tracked from week index 3 onward (6/21-6/27)
 const NEW_METRICS_START_WEEK = 3;
@@ -325,6 +326,7 @@ async function syncSalesTracker() {
         { metric: 'Revenue Collected',   value: revenueCollected },
         { metric: 'Total Commissions',   value: totalCommissions },
         { metric: 'Number of Sales',     value: numSales },
+        { metric: 'Revenue per Sale',   value: numSales > 0 ? revenue / numSales : 0 },
         { metric: 'Leads Contacted',     value: numContacted },
         { metric: 'Bids Sent',           value: numBids },
         { metric: 'Contact-to-Bid %',    value: contactToBid },

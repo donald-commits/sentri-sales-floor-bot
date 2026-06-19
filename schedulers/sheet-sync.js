@@ -26,6 +26,7 @@ const AGENTS = [
   { display: 'Shez',             notionId: '317d872b-594c-81b9-af88-0002411b9da8', callLogRep: 'Shez Barlow' },
   { display: 'Mahonri',          notionId: '36ed872b-594c-81f6-8748-0002835632af', callLogRep: 'Mahonri Barlow' },
   { display: 'Alison',           notionId: '373d872b-594c-813e-b473-0002577c94ba', callLogRep: 'Alison Shivnen' },
+  { display: 'Courtney',         notionId: '374d872b-594c-81ee-ae26-000260f564c9', callLogRep: 'Courtney Blasiol' },
 ];
 
 const CALL_LOG_DB_ID = 'b3809080-3268-48c9-a1e4-f137bf76a6e6';

@@ -41,10 +41,11 @@ const METRIC_ROWS = {
   'Contact-to-Bid %':        5,
   'Bid-to-Sale %':           6,
   'Conversion Rate %':       7,
-  'Avg Talk Time / Convo':   8,
+  'Answer Rate %':           8,
+  'Avg Talk Time / Convo':   9,
 };
 
-const NUM_METRICS = 11;
+const NUM_METRICS = 12;
 
 // New metrics only tracked from week index 3 onward (6/21-6/27)
 const NEW_METRICS_START_WEEK = 3;
@@ -310,6 +311,9 @@ async function syncSalesTracker() {
         // Conversion Rate (Sales / Leads Taken)
         const conversionRate = numLeadsTaken > 0 ? numSales / numLeadsTaken : 0;
 
+        // Answer Rate (Leads Contacted / Total Leads Taken)
+        const answerRate = numLeadsTaken > 0 ? numContacted / numLeadsTaken : 0;
+
         // Avg Talk Time per Conversation (calls > 1 min, in minutes)
         let avgTalkTime = 0;
         if (agent.callLogRep) {
@@ -331,6 +335,7 @@ async function syncSalesTracker() {
         cellUpdates.push(
           { metric: 'Total Leads Taken',       value: numLeadsTaken },
           { metric: 'Conversion Rate %',       value: conversionRate },
+          { metric: 'Answer Rate %',           value: answerRate },
           { metric: 'Avg Talk Time / Convo',   value: avgTalkTime },
         );
       }

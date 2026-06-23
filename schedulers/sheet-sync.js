@@ -19,7 +19,6 @@ const SHEET_NAME = 'Weekly Tracking';
 
 // Agent display names → Notion people IDs + Call Log rep names
 const AGENTS = [
-  { display: 'Manny (Emmanuel)', notionId: '360d872b-594c-81cf-a045-0002cdaa4b38', callLogRep: 'Emmanuel Marquez' },
   { display: 'Jasmine',          notionId: '36cd872b-594c-8179-a7ab-0002da77ad1b', callLogRep: 'Jasmine Cruz' },
   { display: 'Akiami',           notionId: '368d872b-594c-81ce-b6c4-0002b0290080', callLogRep: 'Akiami Byrd' },
   { display: 'Avery',            notionId: '36dd872b-594c-81b0-a174-000296d5378f', callLogRep: 'Avery Hammon' },

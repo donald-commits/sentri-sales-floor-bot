@@ -313,7 +313,7 @@ async function syncSalesTracker() {
       const miscRevenue = miscPaid.reduce((sum, p) => sum + (p.properties['Misc Amount']?.number || 0), 0);
 
       const revenueCollected = initialRevenue + finalRevenue + miscRevenue;
-      const totalCommissions = revenueCollected * 0.05;
+      const totalCommissions = revenue * 0.05;
 
       // Ratios
       const contactToBid = numContacted > 0 ? numBids / numContacted : 0;

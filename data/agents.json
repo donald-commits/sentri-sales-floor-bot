@@ -152,7 +152,7 @@
       "quoUserId": "USUatMA2dg",
       "team": "sentri",
       "role": "agent",
-      "active": true
+      "active": false
     },
     {
       "name": "Courtney Blasiol",
@@ -170,7 +170,7 @@
       "quoUserId": "USHby5XGTg",
       "team": "sentri",
       "role": "agent",
-      "active": true
+      "active": false
     },
     {
       "name": "Aisha Owmby",
@@ -179,7 +179,7 @@
       "quoUserId": "USjy0SalDa",
       "team": "sentri",
       "role": "agent",
-      "active": true
+      "active": false
     },
     {
       "name": "Carter Nettell",

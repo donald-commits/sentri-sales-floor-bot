@@ -49,6 +49,12 @@ const METRIC_ROWS = {
   // Call Reviews Done = 14 (manual)
 };
 
+// Exclude home building leads from all trade metrics
+const EXCLUDE_HOME_BUILD = [
+  { property: 'Services Requested', multi_select: { does_not_contain: 'New Home Build' } },
+  { property: 'Services Requested', multi_select: { does_not_contain: 'Home Build' } },
+];
+
 const NUM_METRICS = 15;
 
 // New metrics only tracked from week index 3 onward (6/21-6/27)
@@ -252,43 +258,47 @@ async function syncSalesTracker() {
       const weekCol = colLetter(3 + w);
       const sheetRow = (row0) => row0 + 1;
 
-      // Sales (Initial Paid Date in week)
+      // Sales (Initial Paid Date in week) — trades only
       const salesPages = await queryAllPages({
         and: [
           { property: '~%7BhH', people: { contains: agent.notionId } },
           { property: 'Initial Paid Date', date: { on_or_after: week.start } },
           { property: 'Initial Paid Date', date: { on_or_before: week.end } },
+          ...EXCLUDE_HOME_BUILD,
         ],
       });
       const numSales = salesPages.length;
       const revenue = salesPages.reduce((sum, p) => sum + (p.properties['Total Amount']?.number || 0), 0);
 
-      // Contacted (Contacted Date in week)
+      // Contacted (Contacted Date in week) — trades only
       const contactedPages = await queryAllPages({
         and: [
           { property: '~%7BhH', people: { contains: agent.notionId } },
           { property: 'Contacted Date', date: { on_or_after: week.start } },
           { property: 'Contacted Date', date: { on_or_before: week.end } },
+          ...EXCLUDE_HOME_BUILD,
         ],
       });
       const numContacted = contactedPages.length;
 
-      // Bids (Bid Sent Date in week)
+      // Bids (Bid Sent Date in week) — trades only
       const bidPages = await queryAllPages({
         and: [
           { property: '~%7BhH', people: { contains: agent.notionId } },
           { property: 'Bid Sent Date', date: { on_or_after: week.start } },
           { property: 'Bid Sent Date', date: { on_or_before: week.end } },
+          ...EXCLUDE_HOME_BUILD,
         ],
       });
       const numBids = bidPages.length;
 
-      // Revenue Collected: Initial + Final + Misc paid amounts in this week
+      // Revenue Collected: Initial + Final + Misc paid amounts — trades only
       const initialPaid = await queryAllPages({
         and: [
           { property: '~%7BhH', people: { contains: agent.notionId } },
           { property: 'Initial Paid Date', date: { on_or_after: week.start } },
           { property: 'Initial Paid Date', date: { on_or_before: week.end } },
+          ...EXCLUDE_HOME_BUILD,
         ],
       });
       const initialRevenue = initialPaid.reduce((sum, p) => sum + (p.properties['Initial Amount']?.number || 0), 0);
@@ -298,6 +308,7 @@ async function syncSalesTracker() {
           { property: '~%7BhH', people: { contains: agent.notionId } },
           { property: 'Final Paid Date', date: { on_or_after: week.start } },
           { property: 'Final Paid Date', date: { on_or_before: week.end } },
+          ...EXCLUDE_HOME_BUILD,
         ],
       });
       const finalRevenue = finalPaid.reduce((sum, p) => sum + (p.properties['Final Amount']?.number || 0), 0);
@@ -307,6 +318,7 @@ async function syncSalesTracker() {
           { property: '~%7BhH', people: { contains: agent.notionId } },
           { property: 'Misc Paid Date', date: { on_or_after: week.start } },
           { property: 'Misc Paid Date', date: { on_or_before: week.end } },
+          ...EXCLUDE_HOME_BUILD,
         ],
       });
       const miscRevenue = miscPaid.reduce((sum, p) => sum + (p.properties['Misc Amount']?.number || 0), 0);
@@ -333,12 +345,13 @@ async function syncSalesTracker() {
 
       // New metrics — only sync from week 3 onward (6/21+)
       if (w >= NEW_METRICS_START_WEEK) {
-        // Total Leads Taken (Sales Agent Assigned Date in week)
+        // Total Leads Taken (Sales Agent Assigned Date in week) — trades only
         const leadsAssigned = await queryAllPages({
           and: [
             { property: '~%7BhH', people: { contains: agent.notionId } },
             { property: 'Sales Agent Assigned Date', date: { on_or_after: week.start } },
             { property: 'Sales Agent Assigned Date', date: { on_or_before: week.end } },
+            ...EXCLUDE_HOME_BUILD,
           ],
         });
         const numLeadsTaken = leadsAssigned.length;

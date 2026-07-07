@@ -13,12 +13,13 @@ const config = require('../config');
 
 // ── Sheet config ────────────────────────────────────────
 const SPREADSHEET_ID = '1tp5wEk0W-RVn_x_MaH8w0hPh40ISNGGw26IKfv6DBOw';
-const SHEET_NAME = 'Weekly Tracking';
+const TRADE_SHEET_NAME = 'Trade Sales';
+const HOME_BUILD_SHEET_NAME = 'Home Building Sales';
 
 // Google OAuth credentials — read at runtime from env vars (Railway) or local file
 
 // Agent display names → Notion people IDs + Call Log rep names
-const AGENTS = [
+const TRADE_AGENTS = [
   { display: 'Jasmine',          notionId: '36cd872b-594c-8179-a7ab-0002da77ad1b', callLogRep: 'Jasmine Cruz' },
   { display: 'Akiami',           notionId: '368d872b-594c-81ce-b6c4-0002b0290080', callLogRep: 'Akiami Byrd' },
   { display: 'Avery',            notionId: '36dd872b-594c-81b0-a174-000296d5378f', callLogRep: 'Avery Hammon' },
@@ -26,6 +27,15 @@ const AGENTS = [
   { display: 'Mahonri',          notionId: '36ed872b-594c-81f6-8748-0002835632af', callLogRep: 'Mahonri Barlow' },
   { display: 'Alison',           notionId: '373d872b-594c-813e-b473-0002577c94ba', callLogRep: 'Alison Shivnen' },
   { display: 'Courtney',         notionId: '374d872b-594c-81ee-ae26-000260f564c9', callLogRep: 'Courtney Blasiol' },
+];
+
+const HOME_BUILD_AGENTS = [
+  { display: 'Avery',            notionId: '36dd872b-594c-81b0-a174-000296d5378f', callLogRep: 'Avery Hammon' },
+  { display: 'Mahonri',          notionId: '36ed872b-594c-81f6-8748-0002835632af', callLogRep: 'Mahonri Barlow' },
+  { display: 'Shez',             notionId: '317d872b-594c-81b9-af88-0002411b9da8', callLogRep: 'Shez Barlow' },
+  { display: 'Jeanette',         notionId: '30bd872b-594c-81c5-ad16-00029d31ad7d', callLogRep: 'Jeanette Zimmerman' },
+  { display: 'Brady',            notionId: '2fdd872b-594c-811f-823d-0002fa6a3a3b', callLogRep: 'Brady Timpson' },
+  { display: 'Alison',           notionId: '373d872b-594c-813e-b473-0002577c94ba', callLogRep: 'Alison Shivnen' },
 ];
 
 const CALL_LOG_DB_ID = 'b3809080-3268-48c9-a1e4-f137bf76a6e6';
@@ -49,10 +59,18 @@ const METRIC_ROWS = {
   // Call Reviews Done = 14 (manual)
 };
 
-// Exclude home building leads from all trade metrics
+// Exclude home building leads from trade metrics
 const EXCLUDE_HOME_BUILD = [
   { property: 'Services Requested', multi_select: { does_not_contain: 'New Home Build' } },
   { property: 'Services Requested', multi_select: { does_not_contain: 'Home Build' } },
+];
+
+// Only include home building leads
+const ONLY_HOME_BUILD = [
+  { or: [
+    { property: 'Services Requested', multi_select: { contains: 'New Home Build' } },
+    { property: 'Services Requested', multi_select: { contains: 'Home Build' } },
+  ]},
 ];
 
 const NUM_METRICS = 15;
@@ -219,11 +237,11 @@ function sheetsApi(token, method, endpoint, body) {
 }
 
 // ── Compute row positions (must match build script) ─────
-function getAgentMetricsStartRow(agentIndex) {
+function getAgentMetricsStartRow(agentIndex, totalAgents) {
   let row = 3; // 0-indexed: title=0, month=1, header=2, data starts at 3
   for (let a = 0; a < agentIndex; a++) {
     row += 1 + NUM_METRICS; // banner + metrics
-    if (a < AGENTS.length - 1) row += 1; // separator
+    if (a < totalAgents - 1) row += 1; // separator
   }
   return row + 1; // +1 for this agent's banner row
 }
@@ -234,19 +252,14 @@ function colLetter(col) {
   return letter;
 }
 
-// ── Main sync function ──────────────────────────────────
-async function syncSalesTracker() {
-  const startTime = Date.now();
-  console.log(`[SheetSync] Starting sales tracker sync...`);
-
-  const token = await getAccessToken();
+// ── Sync a single sheet tab ─────────────────────────────
+async function syncSheet(token, agents, sheetName, serviceFilter, currentWeekIdx) {
+  console.log(`[SheetSync] Syncing "${sheetName}" (${agents.length} agents)...`);
   const updates = [];
-  const currentWeekIdx = getCurrentWeekIndex();
-  console.log(`[SheetSync]   Current week index: ${currentWeekIdx}`);
 
-  for (let a = 0; a < AGENTS.length; a++) {
-    const agent = AGENTS[a];
-    const metricsStart = getAgentMetricsStartRow(a);
+  for (let a = 0; a < agents.length; a++) {
+    const agent = agents[a];
+    const metricsStart = getAgentMetricsStartRow(a, agents.length);
     console.log(`[SheetSync]   Syncing ${agent.display}...`);
 
     for (let w = 0; w < WEEKS.length; w++) {
@@ -264,7 +277,7 @@ async function syncSalesTracker() {
           { property: '~%7BhH', people: { contains: agent.notionId } },
           { property: 'Initial Paid Date', date: { on_or_after: week.start } },
           { property: 'Initial Paid Date', date: { on_or_before: week.end } },
-          ...EXCLUDE_HOME_BUILD,
+          ...serviceFilter,
         ],
       });
       const numSales = salesPages.length;
@@ -276,7 +289,7 @@ async function syncSalesTracker() {
           { property: '~%7BhH', people: { contains: agent.notionId } },
           { property: 'Contacted Date', date: { on_or_after: week.start } },
           { property: 'Contacted Date', date: { on_or_before: week.end } },
-          ...EXCLUDE_HOME_BUILD,
+          ...serviceFilter,
         ],
       });
       const numContacted = contactedPages.length;
@@ -287,7 +300,7 @@ async function syncSalesTracker() {
           { property: '~%7BhH', people: { contains: agent.notionId } },
           { property: 'Bid Sent Date', date: { on_or_after: week.start } },
           { property: 'Bid Sent Date', date: { on_or_before: week.end } },
-          ...EXCLUDE_HOME_BUILD,
+          ...serviceFilter,
         ],
       });
       const numBids = bidPages.length;
@@ -298,7 +311,7 @@ async function syncSalesTracker() {
           { property: '~%7BhH', people: { contains: agent.notionId } },
           { property: 'Initial Paid Date', date: { on_or_after: week.start } },
           { property: 'Initial Paid Date', date: { on_or_before: week.end } },
-          ...EXCLUDE_HOME_BUILD,
+          ...serviceFilter,
         ],
       });
       const initialRevenue = initialPaid.reduce((sum, p) => sum + (p.properties['Initial Amount']?.number || 0), 0);
@@ -308,7 +321,7 @@ async function syncSalesTracker() {
           { property: '~%7BhH', people: { contains: agent.notionId } },
           { property: 'Final Paid Date', date: { on_or_after: week.start } },
           { property: 'Final Paid Date', date: { on_or_before: week.end } },
-          ...EXCLUDE_HOME_BUILD,
+          ...serviceFilter,
         ],
       });
       const finalRevenue = finalPaid.reduce((sum, p) => sum + (p.properties['Final Amount']?.number || 0), 0);
@@ -318,7 +331,7 @@ async function syncSalesTracker() {
           { property: '~%7BhH', people: { contains: agent.notionId } },
           { property: 'Misc Paid Date', date: { on_or_after: week.start } },
           { property: 'Misc Paid Date', date: { on_or_before: week.end } },
-          ...EXCLUDE_HOME_BUILD,
+          ...serviceFilter,
         ],
       });
       const miscRevenue = miscPaid.reduce((sum, p) => sum + (p.properties['Misc Amount']?.number || 0), 0);
@@ -351,7 +364,7 @@ async function syncSalesTracker() {
             { property: '~%7BhH', people: { contains: agent.notionId } },
             { property: 'Sales Agent Assigned Date', date: { on_or_after: week.start } },
             { property: 'Sales Agent Assigned Date', date: { on_or_before: week.end } },
-            ...EXCLUDE_HOME_BUILD,
+            ...serviceFilter,
           ],
         });
         const numLeadsTaken = leadsAssigned.length;
@@ -390,16 +403,32 @@ async function syncSalesTracker() {
 
       for (const { metric, value } of cellUpdates) {
         const row1 = sheetRow(metricsStart + METRIC_ROWS[metric]);
-        updates.push({ range: `'${SHEET_NAME}'!${weekCol}${row1}`, values: [[value]] });
+        updates.push({ range: `'${sheetName}'!${weekCol}${row1}`, values: [[value]] });
       }
     }
   }
 
-  console.log(`[SheetSync]   Writing ${updates.length} cells to sheet...`);
-  await sheetsApi(token, 'POST', '/values:batchUpdate', { valueInputOption: 'USER_ENTERED', data: updates });
+  if (updates.length > 0) {
+    console.log(`[SheetSync]   Writing ${updates.length} cells to "${sheetName}"...`);
+    await sheetsApi(token, 'POST', '/values:batchUpdate', { valueInputOption: 'USER_ENTERED', data: updates });
+  }
+  return updates.length;
+}
+
+// ── Main sync — runs both sheets ────────────────────────
+async function syncSalesTracker() {
+  const startTime = Date.now();
+  console.log(`[SheetSync] Starting sales tracker sync...`);
+
+  const token = await getAccessToken();
+  const currentWeekIdx = getCurrentWeekIndex();
+  console.log(`[SheetSync]   Current week index: ${currentWeekIdx}`);
+
+  const tradeCells = await syncSheet(token, TRADE_AGENTS, TRADE_SHEET_NAME, EXCLUDE_HOME_BUILD, currentWeekIdx);
+  const homeCells = await syncSheet(token, HOME_BUILD_AGENTS, HOME_BUILD_SHEET_NAME, ONLY_HOME_BUILD, currentWeekIdx);
 
   const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
-  console.log(`[SheetSync] Sync complete in ${elapsed}s — ${updates.length} cells updated.`);
+  console.log(`[SheetSync] Sync complete in ${elapsed}s — ${tradeCells + homeCells} cells updated (trade: ${tradeCells}, home: ${homeCells}).`);
 }
 
 module.exports = { syncSalesTracker };

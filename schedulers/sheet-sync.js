@@ -21,7 +21,6 @@ const HOME_BUILD_SHEET_NAME = 'Home Building Sales';
 // Agent display names → Notion people IDs + Call Log rep names
 const TRADE_AGENTS = [
   { display: 'Jasmine',          notionId: '36cd872b-594c-8179-a7ab-0002da77ad1b', callLogRep: 'Jasmine Cruz' },
-  { display: 'Akiami',           notionId: '368d872b-594c-81ce-b6c4-0002b0290080', callLogRep: 'Akiami Byrd' },
   { display: 'Avery',            notionId: '36dd872b-594c-81b0-a174-000296d5378f', callLogRep: 'Avery Hammon' },
   { display: 'Shez',             notionId: '317d872b-594c-81b9-af88-0002411b9da8', callLogRep: 'Shez Barlow' },
   { display: 'Mahonri',          notionId: '36ed872b-594c-81f6-8748-0002835632af', callLogRep: 'Mahonri Barlow' },

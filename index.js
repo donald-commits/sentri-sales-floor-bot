@@ -199,6 +199,7 @@ function startSchedulers() {
   const { runDailyRecap } = require('./schedulers/daily-recap');
   const { syncSalesTracker } = require('./schedulers/sheet-sync');
   const { runBidCheck } = require('./schedulers/bid-check');
+  const { runNewLeadCheck } = require('./schedulers/new-lead-check');
   const { syncAgentsFromRoles } = require('./schedulers/agent-sync');
 
   const tz = config.timezone;
@@ -246,6 +247,18 @@ function startSchedulers() {
     runBidCheck(client, channelIds['accountability'], 'END OF DAY BID CHECK');
   });
 
+  // Midday new lead check — 1:00 PM MST, weekdays
+  new Cron('0 13 * * 1-5', { timezone: 'America/Denver' }, () => {
+    console.log('[Scheduler] Running midday new lead check...');
+    runNewLeadCheck(client, channelIds['accountability'], 'MIDDAY NEW LEAD CHECK');
+  });
+
+  // EOD new lead check — 5:00 PM MST, weekdays
+  new Cron('0 17 * * 1-5', { timezone: 'America/Denver' }, () => {
+    console.log('[Scheduler] Running EOD new lead check...');
+    runNewLeadCheck(client, channelIds['accountability'], 'END OF DAY NEW LEAD CHECK');
+  });
+
   // Sales tracker sheet sync — every hour, 7 AM to 8 PM CT
   new Cron('0 7-20 * * *', { timezone: tz }, () => {
     console.log('[Scheduler] Running sales tracker sheet sync...');
@@ -268,15 +281,13 @@ function startSchedulers() {
 
   console.log('[Scheduler] Cron jobs registered:');
   console.log('  - Sale poller: every 3 min');
-  console.log('  - Quo scraper: every 30 min 8AM-6PM MST weekdays');
-  console.log('  - Noon call check: 12:05 PM MST weekdays');
-  console.log('  - EOD call check: 5:05 PM MST weekdays');
   console.log('  - Daily recap: 5:10 PM MST weekdays');
   console.log('  - Midday bid check: 12:00 PM MST weekdays');
   console.log('  - EOD bid check: 5:00 PM MST weekdays');
+  console.log('  - Midday new lead check: 1:00 PM MST weekdays');
+  console.log('  - EOD new lead check: 5:00 PM MST weekdays');
   console.log('  - Weekly sales board: 6:00 PM CT weekdays');
   console.log('  - Monthly leaderboard: Monday 8:00 AM CT');
-  console.log('  - Agent role sync: 7:00 AM MST daily + on startup');
   console.log('  - Sheet sync: hourly 7AM-8PM CT + on startup');
 }
 

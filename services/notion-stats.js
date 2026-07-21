@@ -235,6 +235,45 @@ function extractSaleDetails(page) {
   };
 }
 
+/**
+ * Get all leads with Status = "New" assigned to a specific agent
+ * that were assigned within the last N days.
+ */
+async function getAgentNewLeads(notionUserId, sinceDaysAgo = 7) {
+  const since = new Date();
+  since.setDate(since.getDate() - sinceDaysAgo);
+  const sinceStr = since.toISOString().split('T')[0];
+
+  const filter = {
+    and: [
+      { property: 'Sales Agent', people: { contains: notionUserId } },
+      { property: 'Status', status: { equals: 'New' } },
+      { property: 'Sales Agent Assigned Date', date: { on_or_after: sinceStr } },
+    ],
+  };
+  return queryLeads(filter);
+}
+
+/**
+ * Get new lead counts for all active agents.
+ * Returns array of { name, discordId, newLeadCount, leads[] }
+ */
+async function getAllAgentNewLeads(agents, sinceDaysAgo = 7) {
+  const results = [];
+
+  for (const agent of agents.filter(a => a.active && a.notionUserId && a.team !== 'admin')) {
+    const leads = await getAgentNewLeads(agent.notionUserId, sinceDaysAgo);
+    results.push({
+      name: agent.name,
+      discordId: agent.discordId,
+      newLeadCount: leads.length,
+      leads,
+    });
+  }
+
+  return results.sort((a, b) => b.newLeadCount - a.newLeadCount);
+}
+
 module.exports = {
   queryLeads,
   getNewSales,
@@ -244,4 +283,6 @@ module.exports = {
   getAgentTotalSales,
   getBidsSentToday,
   extractSaleDetails,
+  getAgentNewLeads,
+  getAllAgentNewLeads,
 };

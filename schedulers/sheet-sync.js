@@ -13,8 +13,9 @@ const config = require('../config');
 
 // ── Sheet config ────────────────────────────────────────
 const SPREADSHEET_ID = '1tp5wEk0W-RVn_x_MaH8w0hPh40ISNGGw26IKfv6DBOw';
-const TRADE_SHEET_NAME = 'Trade Sales';
+const TRADE_SHEET_NAME = 'Sentri Trade Sales';
 const HOME_BUILD_SHEET_NAME = 'Home Building Sales';
+const PLUSONE_SHEET_NAME = 'Plus One Trade Sales';
 
 // Google OAuth credentials — read at runtime from env vars (Railway) or local file
 
@@ -36,6 +37,17 @@ const HOME_BUILD_AGENTS = [
   { display: 'Brady',            notionId: '2fdd872b-594c-811f-823d-0002fa6a3a3b', callLogRep: 'Brady Timpson' },
   { display: 'Alison',           notionId: '373d872b-594c-813e-b473-0002577c94ba', callLogRep: 'Alison Shivnen' },
 ];
+
+const PLUSONE_AGENTS = [
+  { display: 'Brady',    notionId: '2fdd872b-594c-811f-823d-0002fa6a3a3b', callLogRep: 'Brady Timpson' },
+  { display: 'Jeanette', notionId: '30bd872b-594c-81c5-ad16-00029d31ad7d', callLogRep: 'Jeanette Zimmerman' },
+  { display: 'Carter',   notionId: '381d872b-594c-8125-8821-0002ce5e5713', callLogRep: null },
+  { display: 'Alan',     notionId: '36cd872b-594c-8121-ae85-0002a07fcb44', callLogRep: 'Alan Dawson' },
+  { display: 'George',   notionId: '372d872b-594c-8165-8dfe-0002e7163af3', callLogRep: 'George Lazo' },
+  { display: 'Verla',    notionId: '327d872b-594c-811e-bc1d-00025da1e7bb', callLogRep: 'Verla Hammon' },
+];
+
+const PLUSONE_NUM_METRICS = 13;
 
 const CALL_LOG_DB_ID = 'b3809080-3268-48c9-a1e4-f137bf76a6e6';
 
@@ -236,10 +248,10 @@ function sheetsApi(token, method, endpoint, body) {
 }
 
 // ── Compute row positions (must match build script) ─────
-function getAgentMetricsStartRow(agentIndex, totalAgents) {
+function getAgentMetricsStartRow(agentIndex, totalAgents, numMetrics = NUM_METRICS) {
   let row = 3; // 0-indexed: title=0, month=1, header=2, data starts at 3
   for (let a = 0; a < agentIndex; a++) {
-    row += 1 + NUM_METRICS; // banner + metrics
+    row += 1 + numMetrics; // banner + metrics
     if (a < totalAgents - 1) row += 1; // separator
   }
   return row + 1; // +1 for this agent's banner row
@@ -252,13 +264,13 @@ function colLetter(col) {
 }
 
 // ── Sync a single sheet tab ─────────────────────────────
-async function syncSheet(token, agents, sheetName, serviceFilter, currentWeekIdx) {
-  console.log(`[SheetSync] Syncing "${sheetName}" (${agents.length} agents)...`);
+async function syncSheet(token, agents, sheetName, serviceFilter, currentWeekIdx, numMetrics = NUM_METRICS, newMetricsStart = NEW_METRICS_START_WEEK) {
+  console.log(`[SheetSync] Syncing "${sheetName}" (${agents.length} agents, ${numMetrics} metrics)...`);
   const updates = [];
 
   for (let a = 0; a < agents.length; a++) {
     const agent = agents[a];
-    const metricsStart = getAgentMetricsStartRow(a, agents.length);
+    const metricsStart = getAgentMetricsStartRow(a, agents.length, numMetrics);
     console.log(`[SheetSync]   Syncing ${agent.display}...`);
 
     for (let w = 0; w < WEEKS.length; w++) {
@@ -355,8 +367,8 @@ async function syncSheet(token, agents, sheetName, serviceFilter, currentWeekIdx
         { metric: 'Bid-to-Sale %',       value: bidToSale },
       ];
 
-      // New metrics — only sync from week 3 onward (6/21+)
-      if (w >= NEW_METRICS_START_WEEK) {
+      // New metrics — only sync from configured start week onward
+      if (w >= newMetricsStart) {
         // Total Leads Taken (Sales Agent Assigned Date in week) — trades only
         const leadsAssigned = await queryAllPages({
           and: [
@@ -425,9 +437,11 @@ async function syncSalesTracker() {
 
   const tradeCells = await syncSheet(token, TRADE_AGENTS, TRADE_SHEET_NAME, EXCLUDE_HOME_BUILD, currentWeekIdx);
   const homeCells = await syncSheet(token, HOME_BUILD_AGENTS, HOME_BUILD_SHEET_NAME, ONLY_HOME_BUILD, currentWeekIdx);
+  const plusOneCells = await syncSheet(token, PLUSONE_AGENTS, PLUSONE_SHEET_NAME, EXCLUDE_HOME_BUILD, currentWeekIdx, PLUSONE_NUM_METRICS, 0);
 
   const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
-  console.log(`[SheetSync] Sync complete in ${elapsed}s — ${tradeCells + homeCells} cells updated (trade: ${tradeCells}, home: ${homeCells}).`);
+  const total = tradeCells + homeCells + plusOneCells;
+  console.log(`[SheetSync] Sync complete in ${elapsed}s — ${total} cells updated (trade: ${tradeCells}, home: ${homeCells}, plusOne: ${plusOneCells}).`);
 }
 
 module.exports = { syncSalesTracker };

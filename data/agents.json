@@ -270,6 +270,15 @@
       "team": "sentri",
       "role": "agent",
       "active": false
+    },
+    {
+      "name": "Warrdrick Timpson",
+      "discordId": "1533861083893469246",
+      "notionUserId": "3aed872b-594c-8138-85aa-000203a3cb0e",
+      "quoUserId": "US6AA1LSV3",
+      "team": "sentri",
+      "role": "agent",
+      "active": true
     }
   ]
 }

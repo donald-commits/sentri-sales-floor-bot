@@ -49,6 +49,13 @@ async function getNewSales(since) {
 }
 
 /**
+ * Statuses that count as a sale. A sold lead progresses
+ * Sold -> Final Sent -> Final Paid, and stays a sale the whole way.
+ * Matches the HELM chart filters (Status: Sold, Final Sent, Final Paid).
+ */
+const SOLD_STATUSES = ['Sold', 'Final Sent', 'Final Paid'];
+
+/**
  * True if a lead is a home building lead.
  * Convention (matches the HELM charts and sheet-sync trade filters):
  * Services Requested contains a "Home Build" option (e.g. "New Home Build").
@@ -71,7 +78,12 @@ function toYMD(date) {
 
 function dateInRange(notionDateStr, startYMD, endYMD) {
   if (!notionDateStr) return false;
-  const ymd = notionDateStr.slice(0, 10);
+  // Datetime values are normalized to their UTC calendar date — this is how
+  // Notion's own date filters (and the HELM charts) bucket them. Date-only
+  // values are used as-is.
+  const ymd = notionDateStr.length > 10
+    ? new Date(notionDateStr).toISOString().slice(0, 10)
+    : notionDateStr;
   return ymd >= startYMD && ymd <= endYMD;
 }
 
@@ -119,7 +131,7 @@ async function getAgentSalesStats(notionUserId, startDate, endDate) {
     }
 
     // Sales: Status = "Sold" AND Initial Paid Date falls in range
-    if (status === 'Sold' && dateInRange(lead.properties?.['Initial Paid Date']?.date?.start, startYMD, endYMD)) {
+    if (SOLD_STATUSES.includes(status) && dateInRange(lead.properties?.['Initial Paid Date']?.date?.start, startYMD, endYMD)) {
       sales++;
       revenue += totalAmount;
       if (isHomeBuildLead(lead)) {
@@ -189,7 +201,7 @@ async function getAgentStatsAllPeriods(notionUserId, weekStart, monthStart) {
         revenueQuoted += totalAmount;
       }
 
-      if (status === 'Sold' && dateInRange(lead.properties?.['Initial Paid Date']?.date?.start, startYMD, endYMD)) {
+      if (SOLD_STATUSES.includes(status) && dateInRange(lead.properties?.['Initial Paid Date']?.date?.start, startYMD, endYMD)) {
         sales++;
         revenue += totalAmount;
         if (isHomeBuildLead(lead)) {
@@ -221,7 +233,7 @@ async function getAgentTotalSales(notionUserId) {
   const filter = {
     and: [
       { property: 'Sales Agent', people: { contains: notionUserId } },
-      { property: 'Status', status: { equals: 'Sold' } },
+      { or: SOLD_STATUSES.map(st => ({ property: 'Status', status: { equals: st } })) },
       { property: 'Initial Paid Date', date: { is_not_empty: true } },
     ],
   };

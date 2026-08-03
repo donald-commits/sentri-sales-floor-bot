@@ -78,12 +78,10 @@ function toYMD(date) {
 
 function dateInRange(notionDateStr, startYMD, endYMD) {
   if (!notionDateStr) return false;
-  // Datetime values are normalized to their UTC calendar date — this is how
-  // Notion's own date filters (and the HELM charts) bucket them. Date-only
-  // values are used as-is.
-  const ymd = notionDateStr.length > 10
-    ? new Date(notionDateStr).toISOString().slice(0, 10)
-    : notionDateStr;
+  // Use the date exactly as entered in Notion (Mountain-time calendar day).
+  // A sale paid 9:50 PM on Jul 31 MDT is a July sale, even though it is
+  // Aug 1 in UTC — per Donald, the local date is authoritative.
+  const ymd = notionDateStr.slice(0, 10);
   return ymd >= startYMD && ymd <= endYMD;
 }
 

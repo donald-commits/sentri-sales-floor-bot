@@ -118,9 +118,10 @@ async function getAgentSalesStats(notionUserId, startDate, endDate) {
   for (const lead of leads) {
     const status = lead.properties?.Status?.status?.name;
     const totalAmount = lead.properties?.['Total Amount']?.number || 0;
+    const isHomeBuild = isHomeBuildLead(lead);
 
-    // Leads taken in this period: based on "Sales Agent Assigned Date"
-    if (dateInRange(lead.properties?.['Sales Agent Assigned Date']?.date?.start, startYMD, endYMD)) {
+    // Leads taken in this period: based on "Sales Agent Assigned Date" — TRADES ONLY
+    if (!isHomeBuild && dateInRange(lead.properties?.['Sales Agent Assigned Date']?.date?.start, startYMD, endYMD)) {
       leadsTaken++;
     }
 
@@ -130,11 +131,11 @@ async function getAgentSalesStats(notionUserId, startDate, endDate) {
       revenueQuoted += totalAmount;
     }
 
-    // Sales: Status = "Sold" AND Initial Paid Date falls in range
+    // Sales: sold-family status AND Initial Paid Date falls in range
     if (SOLD_STATUSES.includes(status) && dateInRange(lead.properties?.['Initial Paid Date']?.date?.start, startYMD, endYMD)) {
       sales++;
       revenue += totalAmount;
-      if (isHomeBuildLead(lead)) {
+      if (isHomeBuild) {
         homeBuildSales++;
         homeBuildRevenue += totalAmount;
       } else {
@@ -144,7 +145,8 @@ async function getAgentSalesStats(notionUserId, startDate, endDate) {
     }
   }
 
-  const conversionRate = leadsTaken > 0 ? sales / leadsTaken : 0;
+  // Conversion rate is trades-only: trade sales / trade leads taken
+  const conversionRate = leadsTaken > 0 ? tradesSales / leadsTaken : 0;
   const bidRate = leadsTaken > 0 ? bids / leadsTaken : 0;
 
   return { sales, revenue, tradesRevenue, homeBuildRevenue, tradesSales, homeBuildSales, bids, revenueQuoted, leadsTaken, conversionRate, bidRate };
@@ -191,8 +193,10 @@ async function getAgentStatsAllPeriods(notionUserId, weekStart, monthStart) {
     for (const lead of leads) {
       const status = lead.properties?.Status?.status?.name;
       const totalAmount = lead.properties?.['Total Amount']?.number || 0;
+      const isHomeBuild = isHomeBuildLead(lead);
 
-      if (dateInRange(lead.properties?.['Sales Agent Assigned Date']?.date?.start, startYMD, endYMD)) {
+      // Leads taken — TRADES ONLY
+      if (!isHomeBuild && dateInRange(lead.properties?.['Sales Agent Assigned Date']?.date?.start, startYMD, endYMD)) {
         leadsTaken++;
       }
 
@@ -204,7 +208,7 @@ async function getAgentStatsAllPeriods(notionUserId, weekStart, monthStart) {
       if (SOLD_STATUSES.includes(status) && dateInRange(lead.properties?.['Initial Paid Date']?.date?.start, startYMD, endYMD)) {
         sales++;
         revenue += totalAmount;
-        if (isHomeBuildLead(lead)) {
+        if (isHomeBuild) {
           homeBuildSales++;
           homeBuildRevenue += totalAmount;
         } else {
@@ -213,7 +217,8 @@ async function getAgentStatsAllPeriods(notionUserId, weekStart, monthStart) {
         }
       }
     }
-    const conversionRate = leadsTaken > 0 ? sales / leadsTaken : 0;
+    // Conversion rate is trades-only: trade sales / trade leads taken
+    const conversionRate = leadsTaken > 0 ? tradesSales / leadsTaken : 0;
     const bidRate = leadsTaken > 0 ? bids / leadsTaken : 0;
     return { sales, revenue, tradesRevenue, homeBuildRevenue, tradesSales, homeBuildSales, bids, revenueQuoted, leadsTaken, conversionRate, bidRate };
   }

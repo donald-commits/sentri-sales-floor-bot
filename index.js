@@ -200,6 +200,8 @@ function startSchedulers() {
   const { syncSalesTracker } = require('./schedulers/sheet-sync');
   const { runBidCheck } = require('./schedulers/bid-check');
   const { runNewLeadCheck } = require('./schedulers/new-lead-check');
+  const { runWeeklyRecap } = require('./schedulers/weekly-recap');
+  const { runMonthlyRecap, isFirstBusinessDay } = require('./schedulers/monthly-recap');
   const { syncAgentsFromRoles } = require('./schedulers/agent-sync');
 
   const tz = config.timezone;
@@ -259,6 +261,20 @@ function startSchedulers() {
     runNewLeadCheck(client, channelIds['accountability'], 'END OF DAY NEW LEAD CHECK');
   });
 
+  // End of week leaderboard — Friday 5:00 PM MDT, ranked by revenue sold
+  new Cron('0 17 * * 5', { timezone: 'America/Denver' }, () => {
+    console.log('[Scheduler] Running end-of-week leaderboard...');
+    runWeeklyRecap(client, channelIds['leaderboards']);
+  });
+
+  // End of month recap — 9:00 AM MDT on the first business day of the new month
+  // Cron fires days 1-3; isFirstBusinessDay() guard ensures only the first weekday posts
+  new Cron('0 9 1-3 * *', { timezone: 'America/Denver' }, () => {
+    if (!isFirstBusinessDay('America/Denver')) return;
+    console.log('[Scheduler] Running end-of-month recap...');
+    runMonthlyRecap(client, channelIds['leaderboards']);
+  });
+
   // Sales tracker sheet sync — every hour, 7 AM to 8 PM CT
   new Cron('0 7-20 * * *', { timezone: tz }, () => {
     console.log('[Scheduler] Running sales tracker sheet sync...');
@@ -288,6 +304,8 @@ function startSchedulers() {
   console.log('  - EOD new lead check: 5:00 PM MST weekdays');
   console.log('  - Weekly sales board: 6:00 PM CT weekdays');
   console.log('  - Monthly leaderboard: Monday 8:00 AM CT');
+  console.log('  - End of week leaderboard: Friday 5:00 PM MDT');
+  console.log('  - End of month recap: first business day 9:00 AM MDT');
   console.log('  - Sheet sync: hourly 7AM-8PM CT + on startup');
 }
 

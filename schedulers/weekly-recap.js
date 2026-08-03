@@ -62,7 +62,7 @@ async function runWeeklyRecap(client, channelId) {
     const lines = stats.map((agent, i) => {
       const rank = rankEmoji(i);
       const mention = agent.discordId ? `<@${agent.discordId}>` : agent.name;
-      return `${rank} ${mention} — **${formatMoney(agent.revenue)}** sold | ${agent.sales} sales`;
+      return `${rank} ${mention} — \u{1F528} **${formatMoney(agent.tradesRevenue)}** trades | \u{1F3E0} **${formatMoney(agent.homeBuildRevenue)}** home builds | ${agent.sales} sales`;
     });
 
     const top = stats[0];

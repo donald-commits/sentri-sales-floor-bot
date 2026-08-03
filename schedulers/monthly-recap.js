@@ -107,7 +107,7 @@ function fill(template, agent) {
 }
 
 function statLine(agent) {
-  return `**${formatMoney(agent.revenue)}** revenue | **${agent.sales}** sales | ${formatPercent(agent.conversionRate)} conv | ${agent.leadsTaken} leads taken`;
+  return `\u{1F528} **${formatMoney(agent.tradesRevenue)}** trades | \u{1F3E0} **${formatMoney(agent.homeBuildRevenue)}** home builds | **${agent.sales}** sales | ${formatPercent(agent.conversionRate)} conv | ${agent.leadsTaken} leads taken`;
 }
 
 /**

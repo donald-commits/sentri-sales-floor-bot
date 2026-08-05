@@ -76,12 +76,10 @@ const EXCLUDE_HOME_BUILD = [
   { property: 'Services Requested', multi_select: { does_not_contain: 'New Home Build' } },
 ];
 
-// Only include home building leads
+// Only include home building leads — only "New Home Build" exists as an
+// option; naming a nonexistent option makes Notion 400 the whole query
 const ONLY_HOME_BUILD = [
-  { or: [
-    { property: 'Services Requested', multi_select: { contains: 'New Home Build' } },
-    { property: 'Services Requested', multi_select: { contains: 'Home Build' } },
-  ]},
+  { property: 'Services Requested', multi_select: { contains: 'New Home Build' } },
 ];
 
 const NUM_METRICS = 15;

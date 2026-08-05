@@ -71,8 +71,9 @@ const METRIC_ROWS = {
 
 // Exclude home building leads from trade metrics
 const EXCLUDE_HOME_BUILD = [
+  // Only "New Home Build" exists as an option — filtering on a nonexistent
+  // option name makes Notion 400 the entire query.
   { property: 'Services Requested', multi_select: { does_not_contain: 'New Home Build' } },
-  { property: 'Services Requested', multi_select: { does_not_contain: 'Home Build' } },
 ];
 
 // Only include home building leads

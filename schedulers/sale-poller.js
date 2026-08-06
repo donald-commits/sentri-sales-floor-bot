@@ -11,24 +11,40 @@ const path = require('path');
 const DATA_DIR = fs.existsSync('/data') ? '/data' : path.join(__dirname, '../data');
 const ANNOUNCED_FILE = path.join(DATA_DIR, 'announced-sales.json');
 
+// Announce sales whose Initial Paid Date (Mountain-time calendar day) is
+// within this many days back. Covers sales entered after 6 PM MDT (past
+// midnight UTC on Railway) and next-day backfills.
+const WINDOW_DAYS = 2;
+
+function mtDate(daysAgo = 0) {
+  return new Date(Date.now() - daysAgo * 86400000)
+    .toLocaleDateString('en-CA', { timeZone: 'America/Denver' });
+}
+
 /**
- * Load announced sales from persistent storage.
- * Resets automatically when the date changes.
+ * Load announced-sale dedup map { saleId: 'YYYY-MM-DD announced' }.
+ * Migrates the legacy { date, ids: [] } format in place.
  */
 function loadAnnounced() {
   try {
     const data = JSON.parse(fs.readFileSync(ANNOUNCED_FILE, 'utf8'));
-    const todayStr = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Denver' });
-    if (data.date === todayStr) {
-      return new Set(data.ids);
+    if (Array.isArray(data.ids)) {
+      const map = {};
+      for (const id of data.ids) map[id] = data.date || mtDate();
+      return map;
     }
+    return data.ids || {};
   } catch {}
-  return new Set();
+  return {};
 }
 
-function saveAnnounced(set) {
-  const todayStr = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Denver' });
-  fs.writeFileSync(ANNOUNCED_FILE, JSON.stringify({ date: todayStr, ids: [...set] }, null, 2));
+function saveAnnounced(map) {
+  // Keep a rolling 7 days of history so nothing re-announces within the window
+  const cutoff = mtDate(7);
+  for (const [id, d] of Object.entries(map)) {
+    if (d < cutoff) delete map[id];
+  }
+  fs.writeFileSync(ANNOUNCED_FILE, JSON.stringify({ ids: map }, null, 2));
 }
 
 /**
@@ -39,10 +55,9 @@ function saveAnnounced(set) {
  */
 async function pollForSales(client, channelId) {
   try {
-    const todayStart = new Date();
-    todayStart.setHours(0, 0, 0, 0);
+    const windowStart = mtDate(WINDOW_DAYS); // YYYY-MM-DD, Mountain time
 
-    const newSales = await notionStats.getNewSales(todayStart);
+    const newSales = await notionStats.getNewSales(windowStart);
 
     if (newSales.length === 0) return;
 
@@ -54,7 +69,7 @@ async function pollForSales(client, channelId) {
 
     for (const sale of newSales) {
       // Skip if already announced (persistent dedup)
-      if (announced.has(sale.id)) continue;
+      if (announced[sale.id]) continue;
 
       const details = notionStats.extractSaleDetails(sale);
       // Find agent — check all agents (active or not) since we announce all sales
@@ -63,11 +78,10 @@ async function pollForSales(client, channelId) {
       const agent = allAgents.find(a => a.notionUserId === details.agentNotionId);
       if (!agent) continue;
 
-      // Verify Initial Paid Date is actually today
+      // Verify Initial Paid Date (MT calendar day) is within the window
       const paidDateStr = sale.properties?.['Initial Paid Date']?.date?.start;
       if (!paidDateStr) continue;
-      const paidDate = new Date(paidDateStr);
-      if (paidDate < todayStart) continue;
+      if (paidDateStr.slice(0, 10) < windowStart) continue;
 
       // Get week/month stats for this agent
       const [weekStats, monthStats, totalSales] = await Promise.all([
@@ -112,7 +126,7 @@ async function pollForSales(client, channelId) {
       }
 
       // Mark as announced
-      announced.add(sale.id);
+      announced[sale.id] = mtDate();
       posted++;
 
       await new Promise(r => setTimeout(r, 1000));

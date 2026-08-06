@@ -38,7 +38,7 @@ async function queryLeads(filter, sorts = []) {
  * Uses "Initial Paid Date" to detect when the sale actually closed.
  */
 async function getNewSales(since) {
-  const dateOnly = since.toISOString().split('T')[0]; // YYYY-MM-DD
+  const dateOnly = typeof since === 'string' ? since : since.toISOString().split('T')[0]; // YYYY-MM-DD
   const filter = {
     and: [
       { property: 'Status', status: { equals: 'Sold' } },

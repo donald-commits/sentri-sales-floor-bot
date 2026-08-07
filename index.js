@@ -219,61 +219,48 @@ function startSchedulers() {
   //   runEodCheck(client, channelIds['accountability']);
   // });
 
-  // Daily recap — 5:10 PM MST weekdays (after EOD check)
-  new Cron('10 17 * * 1-5', { timezone: 'America/Denver' }, () => {
-    console.log('[Scheduler] Running daily recap...');
-    runDailyRecap(client, channelIds['wins-and-goals']);
-  });
+  // ─── Scheduled jobs — single source of truth for crons AND boot catch-up.
+  // If a restart/deploy lands on a slot, catchUpMissedJobs() fires the job
+  // on boot (within its grace window) so posts are never silently swallowed.
+  const { markFired, catchUpMissedJobs } = require('./utils/job-catchup');
+  const DEN = 'America/Denver';
+  const WEEKDAYS = [1, 2, 3, 4, 5];
 
-  // Daily (weekday) sales leaderboard — 6:00 PM CT, weekdays
-  new Cron('0 18 * * 1-5', { timezone: tz }, () => {
-    console.log('[Scheduler] Running daily sales leaderboard...');
-    runDailySalesBoard(client, channelIds['leaderboards']);
-  });
+  const JOBS = [
+    { job: 'daily-recap', tz: DEN, hour: 17, min: 10, dows: WEEKDAYS, label: 'daily recap',
+      run: () => runDailyRecap(client, channelIds['wins-and-goals']) },
+    { job: 'daily-sales-board', tz, hour: 18, min: 0, dows: WEEKDAYS, label: 'daily sales leaderboard',
+      run: () => runDailySalesBoard(client, channelIds['leaderboards']) },
+    { job: 'monthly-leaderboard', tz, hour: 8, min: 0, dows: [1], label: 'monthly leaderboard',
+      run: () => runMonthlyLeaderboard(client, channelIds['leaderboards']) },
+    { job: 'midday-bid-check', tz: DEN, hour: 12, min: 0, dows: WEEKDAYS, label: 'midday bid check',
+      run: () => runBidCheck(client, channelIds['accountability'], 'MIDDAY BID CHECK') },
+    { job: 'eod-bid-check', tz: DEN, hour: 17, min: 0, dows: WEEKDAYS, label: 'EOD bid check',
+      run: () => runBidCheck(client, channelIds['accountability'], 'END OF DAY BID CHECK') },
+    { job: 'midday-lead-check', tz: DEN, hour: 13, min: 0, dows: WEEKDAYS, label: 'midday new lead check',
+      run: () => runNewLeadCheck(client, channelIds['accountability'], 'MIDDAY NEW LEAD CHECK') },
+    { job: 'eod-lead-check', tz: DEN, hour: 17, min: 0, dows: WEEKDAYS, label: 'EOD new lead check',
+      run: () => runNewLeadCheck(client, channelIds['accountability'], 'END OF DAY NEW LEAD CHECK') },
+    { job: 'weekly-recap', tz: DEN, hour: 17, min: 0, dows: [5], label: 'end-of-week leaderboard',
+      run: () => runWeeklyRecap(client, channelIds['leaderboards']) },
+    { job: 'monthly-recap', tz: DEN, hour: 9, min: 0, dows: WEEKDAYS, label: 'end-of-month recap',
+      graceMin: 180, when: () => isFirstBusinessDay(DEN),
+      run: () => runMonthlyRecap(client, channelIds['leaderboards']) },
+  ];
 
-  // Monthly leaderboard — Monday 8:00 AM CT
-  new Cron('0 8 * * 1', { timezone: tz }, () => {
-    console.log('[Scheduler] Running monthly leaderboard...');
-    runMonthlyLeaderboard(client, channelIds['leaderboards']);
-  });
+  for (const j of JOBS) {
+    new Cron(`${j.min} ${j.hour} * * ${j.dows.join(',')}`, { timezone: j.tz }, () => {
+      if (j.when && !j.when()) return;
+      console.log(`[Scheduler] Running ${j.label}...`);
+      markFired(j.job, j.tz);
+      j.run();
+    });
+  }
 
-  // Midday bid check — 12:00 PM MST, weekdays
-  new Cron('0 12 * * 1-5', { timezone: 'America/Denver' }, () => {
-    console.log('[Scheduler] Running midday bid check...');
-    runBidCheck(client, channelIds['accountability'], 'MIDDAY BID CHECK');
-  });
-
-  // EOD bid check — 5:00 PM MST, weekdays
-  new Cron('0 17 * * 1-5', { timezone: 'America/Denver' }, () => {
-    console.log('[Scheduler] Running EOD bid check...');
-    runBidCheck(client, channelIds['accountability'], 'END OF DAY BID CHECK');
-  });
-
-  // Midday new lead check — 1:00 PM MST, weekdays
-  new Cron('0 13 * * 1-5', { timezone: 'America/Denver' }, () => {
-    console.log('[Scheduler] Running midday new lead check...');
-    runNewLeadCheck(client, channelIds['accountability'], 'MIDDAY NEW LEAD CHECK');
-  });
-
-  // EOD new lead check — 5:00 PM MST, weekdays
-  new Cron('0 17 * * 1-5', { timezone: 'America/Denver' }, () => {
-    console.log('[Scheduler] Running EOD new lead check...');
-    runNewLeadCheck(client, channelIds['accountability'], 'END OF DAY NEW LEAD CHECK');
-  });
-
-  // End of week leaderboard — Friday 5:00 PM MDT, ranked by revenue sold
-  new Cron('0 17 * * 5', { timezone: 'America/Denver' }, () => {
-    console.log('[Scheduler] Running end-of-week leaderboard...');
-    runWeeklyRecap(client, channelIds['leaderboards']);
-  });
-
-  // End of month recap — 9:00 AM MDT on the first business day of the new month
-  // Cron fires days 1-3; isFirstBusinessDay() guard ensures only the first weekday posts
-  new Cron('0 9 1-3 * *', { timezone: 'America/Denver' }, () => {
-    if (!isFirstBusinessDay('America/Denver')) return;
-    console.log('[Scheduler] Running end-of-month recap...');
-    runMonthlyRecap(client, channelIds['leaderboards']);
-  });
+  // Boot catch-up — fire anything whose slot was missed during a restart
+  setTimeout(() => {
+    catchUpMissedJobs(JOBS).catch(err => console.error('[CatchUp] Error:', err.message));
+  }, 20000);
 
   // Sales tracker sheet sync — every hour, 7 AM to 8 PM CT
   new Cron('0 7-20 * * *', { timezone: tz }, () => {
@@ -306,6 +293,7 @@ function startSchedulers() {
   console.log('  - Monthly leaderboard: Monday 8:00 AM CT');
   console.log('  - End of week leaderboard: Friday 5:00 PM MDT');
   console.log('  - End of month recap: first business day 9:00 AM MDT');
+  console.log('  - Boot catch-up for missed job slots: 20s after start');
   console.log('  - Sheet sync: hourly 7AM-8PM CT + on startup');
 }
 

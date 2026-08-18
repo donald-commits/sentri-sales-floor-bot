@@ -277,8 +277,8 @@ async function syncSheet(token, agents, sheetName, serviceFilter, currentWeekIdx
     for (let w = 0; w < WEEKS.length; w++) {
       const week = WEEKS[w];
 
-      // Only sync current week — skip past and future weeks
-      if (w !== currentWeekIdx) continue;
+      // Skip future weeks
+      if (w > currentWeekIdx) continue;
 
       const weekCol = colLetter(3 + w);
       const sheetRow = (row0) => row0 + 1;

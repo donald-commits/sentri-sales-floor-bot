@@ -273,9 +273,27 @@
     },
     {
       "name": "Warrdrick Timpson",
-      "discordId": "1533861083893469246",
+      "discordId": "1537501275330060412",
       "notionUserId": "3aed872b-594c-8138-85aa-000203a3cb0e",
       "quoUserId": "US6AA1LSV3",
+      "team": "sentri",
+      "role": "agent",
+      "active": true
+    },
+    {
+      "name": "Chedo Miranda",
+      "discordId": "1044071286936191087",
+      "notionUserId": "3c0d872b-594c-81b6-9a0c-000252fe3984",
+      "quoUserId": "USTZclV2NW",
+      "team": "sentri",
+      "role": "agent",
+      "active": true
+    },
+    {
+      "name": "Christian Cortright",
+      "discordId": "1539299521027379240",
+      "notionUserId": "3bbd872b-594c-81c1-b4ba-00023ce43c8c",
+      "quoUserId": "USX8ItQACJ",
       "team": "sentri",
       "role": "agent",
       "active": true

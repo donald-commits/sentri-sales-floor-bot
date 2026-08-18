@@ -21,11 +21,14 @@ const PLUSONE_SHEET_NAME = 'Plus One Trade Sales';
 
 // Agent display names → Notion people IDs + Call Log rep names
 const TRADE_AGENTS = [
+  // Order MUST match the sheet's block order top-to-bottom
   { display: 'Avery',            notionId: '36dd872b-594c-81b0-a174-000296d5378f', callLogRep: 'Avery Hammon' },
   { display: 'Shez',             notionId: '317d872b-594c-81b9-af88-0002411b9da8', callLogRep: 'Shez Barlow' },
   { display: 'Mahonri',          notionId: '36ed872b-594c-81f6-8748-0002835632af', callLogRep: 'Mahonri Barlow' },
   { display: 'Alison',           notionId: '373d872b-594c-813e-b473-0002577c94ba', callLogRep: 'Alison Shivnen' },
   { display: 'Courtney',         notionId: '374d872b-594c-81ee-ae26-000260f564c9', callLogRep: 'Courtney Blasiol' },
+  { display: 'Chedo',            notionId: '3c0d872b-594c-81b6-9a0c-000252fe3984', callLogRep: 'Chedo Miranda' },
+  { display: 'Christian',        notionId: '3bbd872b-594c-81c1-b4ba-00023ce43c8c', callLogRep: 'Christian Cortright' },
 ];
 
 const HOME_BUILD_AGENTS = [
@@ -387,18 +390,24 @@ async function syncSheet(token, agents, sheetName, serviceFilter, currentWeekIdx
         // Avg Talk Time per Conversation (calls > 1 min, in minutes)
         let avgTalkTime = 0;
         if (agent.callLogRep) {
-          const callPages = await queryAllPages({
-            and: [
-              { property: 'Rep', select: { equals: agent.callLogRep } },
-              { property: 'Call Date', date: { on_or_after: week.start } },
-              { property: 'Call Date', date: { on_or_before: week.end } },
-              { property: 'Duration (s)', number: { greater_than: 60 } },
-            ],
-          }, CALL_LOG_DB_ID);
+          try {
+            const callPages = await queryAllPages({
+              and: [
+                { property: 'Rep', select: { equals: agent.callLogRep } },
+                { property: 'Call Date', date: { on_or_after: week.start } },
+                { property: 'Call Date', date: { on_or_before: week.end } },
+                { property: 'Duration (s)', number: { greater_than: 60 } },
+              ],
+            }, CALL_LOG_DB_ID);
 
-          if (callPages.length > 0) {
-            const totalSec = callPages.reduce((sum, p) => sum + (p.properties['Duration (s)']?.number || 0), 0);
-            avgTalkTime = (totalSec / callPages.length) / 60; // in minutes
+            if (callPages.length > 0) {
+              const totalSec = callPages.reduce((sum, p) => sum + (p.properties['Duration (s)']?.number || 0), 0);
+              avgTalkTime = (totalSec / callPages.length) / 60; // in minutes
+            }
+          } catch (err) {
+            // New agents have no "Rep" select option until their first call
+            // syncs into the call log — Notion 400s on unknown options.
+            if (!/not found for property/.test(err.message)) throw err;
           }
         }
 

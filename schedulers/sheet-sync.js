@@ -25,7 +25,6 @@ const TRADE_AGENTS = [
   { display: 'Avery',            notionId: '36dd872b-594c-81b0-a174-000296d5378f', callLogRep: 'Avery Hammon' },
   { display: 'Shez',             notionId: '317d872b-594c-81b9-af88-0002411b9da8', callLogRep: 'Shez Barlow' },
   { display: 'Mahonri',          notionId: '36ed872b-594c-81f6-8748-0002835632af', callLogRep: 'Mahonri Barlow' },
-  { display: 'Alison',           notionId: '373d872b-594c-813e-b473-0002577c94ba', callLogRep: 'Alison Shivnen' },
   { display: 'Courtney',         notionId: '374d872b-594c-81ee-ae26-000260f564c9', callLogRep: 'Courtney Blasiol' },
   { display: 'Chedo',            notionId: '3c0d872b-594c-81b6-9a0c-000252fe3984', callLogRep: 'Chedo Miranda' },
   { display: 'Christian',        notionId: '3bbd872b-594c-81c1-b4ba-00023ce43c8c', callLogRep: 'Christian Cortright' },
@@ -37,7 +36,6 @@ const HOME_BUILD_AGENTS = [
   { display: 'Shez',             notionId: '317d872b-594c-81b9-af88-0002411b9da8', callLogRep: 'Shez Barlow' },
   { display: 'Jeanette',         notionId: '30bd872b-594c-81c5-ad16-00029d31ad7d', callLogRep: 'Jeanette Zimmerman' },
   { display: 'Brady',            notionId: '2fdd872b-594c-811f-823d-0002fa6a3a3b', callLogRep: 'Brady Timpson' },
-  { display: 'Alison',           notionId: '373d872b-594c-813e-b473-0002577c94ba', callLogRep: 'Alison Shivnen' },
 ];
 
 const PLUSONE_AGENTS = [
